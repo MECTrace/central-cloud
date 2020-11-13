@@ -33,7 +33,7 @@ public class DataTask extends DataInfo {
 	}
 
 	public boolean checkCopyStatus(int nodeCount, int copyDelayTime) {
-		if ( copyStatus < nodeCount ) {
+		if ( copyStatus < nodeCount && fromDevice ) {
 			long now = System.currentTimeMillis();
 			long due = timestamp + ((copyDelayTime * 1000) * (1+copyStatus));
 
