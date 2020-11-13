@@ -3,6 +3,7 @@ package com.pentasecurity.edge.controller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,6 +19,9 @@ import com.pentasecurity.edge.service.EdgeNodeService;
 public class ApiController {
     Logger logger = LoggerFactory.getLogger("mainLogger");
 
+	@Value("${edge.edge-id}")
+    private String edgeId;
+
     @Autowired
     EdgeNodeService edgeNodeService;
 
@@ -25,6 +29,8 @@ public class ApiController {
     @ResponseBody
     public ApiResponse upload(@RequestBody DataInfo dataInfo) {
     	ApiResponse apiResponse = new ApiResponse(-99, "error");
+
+    	logger.debug(edgeId+" : upload  from "+dataInfo.getDeviceId());
 
     	try {
     		edgeNodeService.putToCache(dataInfo, true);
@@ -42,6 +48,8 @@ public class ApiController {
     @ResponseBody
     public ApiResponse copy(@RequestBody DataInfo dataInfo) {
     	ApiResponse apiResponse = new ApiResponse(-99, "error");
+
+    	logger.debug(edgeId+" : copy    from "+dataInfo.getFromId());
 
     	try {
     		edgeNodeService.putToCache(dataInfo, false);
