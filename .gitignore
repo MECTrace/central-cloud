@@ -1,0 +1,13 @@
+*/.classpath
+*/.settings
+*/.sts4-cache
+
+*/.gradle
+*/build
+*/bin
+*/gradle
+
+temp
+
+*/*.log
+*/storage/*.data

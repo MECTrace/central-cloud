@@ -1,0 +1,17 @@
+{"properties": [
+  {
+    "name": "edge.device-id",
+    "type": "java.lang.String",
+    "description": "device id"
+  },
+  {
+    "name": "edge.device-model",
+    "type": "java.lang.String",
+    "description": "device model"
+  },
+  {
+    "name": "edge.node-list",
+    "type": "java.lang.String",
+    "description": "사용 가능한 edge node list"
+  }
+]}
