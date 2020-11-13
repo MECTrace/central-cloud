@@ -25,10 +25,6 @@ public class HttpUtil {
             Response response = client.newCall(request).execute();
 
             responseString = response.body().string();
-
-            logger.debug(url);
-            logger.debug(json);
-            logger.debug(responseString);
         } catch(Exception e) {
             e.printStackTrace();
         }
@@ -47,9 +43,6 @@ public class HttpUtil {
             Response response = client.newCall(request).execute();
 
             responseString = response.body().string();
-
-            logger.debug(url);
-            logger.debug(responseString);
         } catch(Exception e) {
             e.printStackTrace();
         }
