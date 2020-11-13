@@ -1,6 +1,5 @@
-package com.pentasecurity.edge.model.request;
+package com.pentasecurity.edge.model;
 
-import com.pentasecurity.edge.model.BaseModel;
 import com.pentasecurity.edge.util.Sha256Util;
 
 import lombok.AllArgsConstructor;
@@ -12,8 +11,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 @EqualsAndHashCode(callSuper=false)
-public class DataFromDeviceToEdgeApiRequest extends BaseModel {
-	public DataFromDeviceToEdgeApiRequest(String deviceId, String data) {
+public class DataInfo extends BaseModel {
+	public DataInfo(String deviceId, String data) {
 		this.dataId = Sha256Util.sha256(data);
 		this.dataFormat = "JSON";
 		this.deviceId = deviceId;

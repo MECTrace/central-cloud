@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.pentasecurity.edge.model.request.DataFromDeviceToEdgeApiRequest;
+import com.pentasecurity.edge.model.DataInfo;
 import com.pentasecurity.edge.util.DataUtil;
 import com.pentasecurity.edge.util.HttpUtil;
 
@@ -22,7 +22,7 @@ public class CreateDataService
 	public void createData() {
 		try {
 			String data = DataUtil.make(100);
-			DataFromDeviceToEdgeApiRequest apiRequest = new DataFromDeviceToEdgeApiRequest(deviceId, data);
+			DataInfo dataInfo = new DataInfo(deviceId, data);
 
         	String[] nodes = nodeList.split(",");
         	String node = "";
@@ -30,7 +30,7 @@ public class CreateDataService
         		node = nodes[(int)Math.floor(Math.random()*nodes.length)];
         	}
 
-        	HttpUtil.post(node+"/api/edge/upload", apiRequest.toJson());
+        	HttpUtil.post(node+"/api/edge/upload", dataInfo.toJson());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
