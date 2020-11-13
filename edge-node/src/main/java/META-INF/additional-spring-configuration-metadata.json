@@ -1,0 +1,27 @@
+{"properties": [
+  {
+    "name": "edge.edge-id",
+    "type": "java.lang.String",
+    "description": "edge id"
+  },
+  {
+    "name": "edge.node-list",
+    "type": "java.lang.String",
+    "description": "사용 가능한 edge node list"
+  },
+  {
+    "name": "edge.gate-list",
+    "type": "java.lang.String",
+    "description": "사용 가능한 edge gate list"
+  },
+  {
+    "name": "edge.storage-path",
+    "type": "java.lang.String",
+    "description": "data 저장공간"
+  },
+  {
+    "name": "edge.copy-delay-time",
+    "type": "java.lang.String",
+    "description": "upload된 데이터를 copy 하는게 걸리는 지연 시간(초)"
+  }
+]}
