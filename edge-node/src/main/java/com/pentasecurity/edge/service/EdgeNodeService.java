@@ -20,9 +20,8 @@ import com.pentasecurity.edge.model.DataTask;
 import com.pentasecurity.edge.util.HttpUtil;
 
 @Service
-public class EdgeNodeService
-{
-	Logger logger = LoggerFactory.getLogger(EdgeNodeService.class);
+public class EdgeNodeService {
+	Logger logger = LoggerFactory.getLogger("mainLogger");
 
 	@Value("${edge.edge-id}")
     private String edgeId;
