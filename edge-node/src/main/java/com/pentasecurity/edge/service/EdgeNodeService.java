@@ -108,10 +108,14 @@ public class EdgeNodeService {
 		    	// 디바이스에서 직접 올라온 데이터를 보고
 				DataInfoAndHistory dataInfoAndHistory = new DataInfoAndHistory(dataTask, edgeId);
 		    	HttpUtil.post(gate+"/api/gw/upload", dataInfoAndHistory.toJson());
+
+		    	logger.debug(edgeId+" : upload  to   gateway");
 			} else {
 				// 이웃 엣지 노드에서 복제받은 데이터를 보고
 				DataHistory dataHistory = new DataHistory(dataTask, edgeId);
 	        	HttpUtil.post(gate+"/api/gw/history", dataHistory.toJson());
+
+	        	logger.debug(edgeId+" : history to   gateway");
 			}
 		}
 		dataTask.setHistoryStatus(1);
@@ -128,6 +132,8 @@ public class EdgeNodeService {
 			DataInfo dataInfo = new DataInfo(dataTask, edgeId);
 			HttpUtil.post(node+"/api/edge/copy", dataInfo.toJson());
 
+			logger.debug(edgeId+" : copy    to   node#"+dataTask.getCopyStatus());
+
 			dataTask.increaseCopyStatus();
 		}
 	}
@@ -139,6 +145,8 @@ public class EdgeNodeService {
 	private void removeDataTask(DataTask dataTask) {
 		if ( dataTask.isDone(gates.length, nodes.length) ) {
 			taskStorage.remove(dataTask.getDataId());
+
+			logger.debug(edgeId+" : done");
 		}
 	}
 

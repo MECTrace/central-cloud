@@ -22,7 +22,6 @@ public class ScheduledJob {
     @Scheduled(cron="*/10 * * * * *")
     public void job()
     {
-    	logger.debug("job job job");
     	createDataService.processTask();
     }
 }
