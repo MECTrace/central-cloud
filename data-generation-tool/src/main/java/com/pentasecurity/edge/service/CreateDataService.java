@@ -12,7 +12,7 @@ import com.pentasecurity.edge.util.HttpUtil;
 @Service
 public class CreateDataService
 {
-	Logger logger = LoggerFactory.getLogger(CreateDataService.class);
+	Logger logger = LoggerFactory.getLogger("mainLogger");
 
     @Value("${edge.device-id}")
     private String deviceId;
