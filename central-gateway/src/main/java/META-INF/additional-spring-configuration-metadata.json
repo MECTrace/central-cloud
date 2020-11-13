@@ -1,0 +1,12 @@
+{"properties": [
+  {
+    "name": "edge.gateway-id",
+    "type": "java.lang.String",
+    "description": "gateway id"
+  },
+  {
+    "name": "edge.storage-path",
+    "type": "java.lang.String",
+    "description": "data 저장공간"
+  }
+]}
