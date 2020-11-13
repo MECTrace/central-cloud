@@ -1,19 +1,19 @@
-package com.pentasecurity.edge.model.request;
+package com.pentasecurity.edge.model;
 
-import com.pentasecurity.edge.model.BaseModel;
-
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
+@AllArgsConstructor
 @Data
 @EqualsAndHashCode(callSuper=false)
-public class HistoryFromEdgeToGatewayApiRequest extends BaseModel {
-	public HistoryFromEdgeToGatewayApiRequest(DataFromEdgeToEdgeApiRequest apiRequest, String edgeId) {
-		dataId = apiRequest.getDataId();
+public class DataHistory extends BaseModel {
+	public DataHistory(DataTask dataTask, String edgeId) {
+		dataId = dataTask.getDataId();
 		fromType = "edge";
-		fromId = apiRequest.getFromId();
+		fromId = dataTask.getFromId();
 		toType = "edge";
 		toId = edgeId;
 		trace = "copy";
