@@ -13,10 +13,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.pentasecurity.edge.model.DataHistory;
+import com.pentasecurity.edge.model.DataInfoAndHistory;
 import com.pentasecurity.edge.model.entity.History;
 import com.pentasecurity.edge.model.entity.Master;
-import com.pentasecurity.edge.model.request.DataFromEdgeToGatewayApiRequest;
-import com.pentasecurity.edge.model.request.HistoryFromEdgeToGatewayApiRequest;
 import com.pentasecurity.edge.model.response.ApiResponse;
 import com.pentasecurity.edge.repository.HistoryRepository;
 import com.pentasecurity.edge.repository.MasterRepository;
@@ -36,19 +36,19 @@ public class ApiController {
 
     @PostMapping("/upload")
     @ResponseBody
-    public ApiResponse upload(@RequestBody DataFromEdgeToGatewayApiRequest apiRequest) {
+    public ApiResponse upload(@RequestBody DataInfoAndHistory dataInfo) {
     	ApiResponse apiResponse = new ApiResponse(-99, "error");
 
     	try {
-    		Master master = new Master(apiRequest);
-    		History history = new History(apiRequest);
+    		Master master = new Master(dataInfo);
+    		History history = new History(dataInfo);
     		masterRepository.save(master);
     		historyRepository.save(history);
 
-    		File file = new File(storagePath+"/"+apiRequest.getDataId()+".data");
+    		File file = new File(storagePath+"/"+dataInfo.getDataId()+".data");
 
 			FileUtils.forceMkdirParent(file);
-			FileUtils.writeStringToFile(file, apiRequest.getData(), "UTF-8");
+			FileUtils.writeStringToFile(file, dataInfo.getData(), "UTF-8");
 
         	apiResponse.setCode(0);
         	apiResponse.setMessage("OK");
@@ -61,11 +61,11 @@ public class ApiController {
 
     @PostMapping("/history")
     @ResponseBody
-    public ApiResponse history(@RequestBody HistoryFromEdgeToGatewayApiRequest apiRequest) {
+    public ApiResponse history(@RequestBody DataHistory dataHistory) {
     	ApiResponse apiResponse = new ApiResponse(-99, "error");
 
     	try {
-    		History history = new History(apiRequest);
+    		History history = new History(dataHistory);
     		historyRepository.save(history);
 
         	apiResponse.setCode(0);

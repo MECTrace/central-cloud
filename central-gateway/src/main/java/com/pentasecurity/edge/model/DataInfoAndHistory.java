@@ -1,6 +1,4 @@
-package com.pentasecurity.edge.model.request;
-
-import com.pentasecurity.edge.model.BaseModel;
+package com.pentasecurity.edge.model;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -9,7 +7,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 @EqualsAndHashCode(callSuper=false)
-public class DataFromEdgeToGatewayApiRequest extends BaseModel {
+public class DataInfoAndHistory extends BaseModel {
 	String dataId;
     String dataFormat;
     String deviceId;

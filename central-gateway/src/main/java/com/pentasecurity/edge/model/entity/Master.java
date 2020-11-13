@@ -6,7 +6,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import com.pentasecurity.edge.model.BaseModel;
-import com.pentasecurity.edge.model.request.DataFromEdgeToGatewayApiRequest;
+import com.pentasecurity.edge.model.DataInfoAndHistory;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,12 +19,12 @@ import lombok.NoArgsConstructor;
 @Data
 @EqualsAndHashCode(callSuper=false)
 public class Master extends BaseModel {
-	public Master(DataFromEdgeToGatewayApiRequest apiRequest) {
-		this.dataId = apiRequest.getDataId();
-		this.sourceId = apiRequest.getDeviceId();
-		this.createTime = new Date(apiRequest.getCreateTime());
-		this.dataFormat = apiRequest.getDataFormat();
-		this.data = apiRequest.getData();
+	public Master(DataInfoAndHistory dataInfo) {
+		this.dataId = dataInfo.getDataId();
+		this.sourceId = dataInfo.getDeviceId();
+		this.createTime = new Date(dataInfo.getCreateTime());
+		this.dataFormat = dataInfo.getDataFormat();
+		this.data = dataInfo.getData();
 	}
 
     @Id

@@ -6,8 +6,8 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import com.pentasecurity.edge.model.BaseModel;
-import com.pentasecurity.edge.model.request.DataFromEdgeToGatewayApiRequest;
-import com.pentasecurity.edge.model.request.HistoryFromEdgeToGatewayApiRequest;
+import com.pentasecurity.edge.model.DataHistory;
+import com.pentasecurity.edge.model.DataInfoAndHistory;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,17 +20,17 @@ import lombok.NoArgsConstructor;
 @Data
 @EqualsAndHashCode(callSuper=false)
 public class History extends BaseModel {
-	public History(DataFromEdgeToGatewayApiRequest apiRequest) {
-		this.dataId = apiRequest.getDataId();
-		this.fromType = apiRequest.getFromType();
-		this.fromId = apiRequest.getDeviceId();
-		this.toType = apiRequest.getToType();
-		this.toId = apiRequest.getToId();
+	public History(DataInfoAndHistory dataInfo) {
+		this.dataId = dataInfo.getDataId();
+		this.fromType = dataInfo.getFromType();
+		this.fromId = dataInfo.getDeviceId();
+		this.toType = dataInfo.getToType();
+		this.toId = dataInfo.getToId();
 		this.trace = "new";
-		this.receivedTime = new Date(apiRequest.getCreateTime());
+		this.receivedTime = new Date(dataInfo.getCreateTime());
 	}
 
-	public History(HistoryFromEdgeToGatewayApiRequest apiRequest) {
+	public History(DataHistory apiRequest) {
 		this.dataId = apiRequest.getDataId();
 		this.fromType = apiRequest.getFromType();
 		this.fromId = apiRequest.getFromId();

@@ -1,15 +1,15 @@
-package com.pentasecurity.edge.model.request;
+package com.pentasecurity.edge.model;
 
-import com.pentasecurity.edge.model.BaseModel;
-
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
+@AllArgsConstructor
 @Data
 @EqualsAndHashCode(callSuper=false)
-public class HistoryFromEdgeToGatewayApiRequest extends BaseModel {
+public class DataHistory extends BaseModel {
 	String dataId;
     String fromType;
     String fromId;
