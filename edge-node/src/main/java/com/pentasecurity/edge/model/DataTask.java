@@ -58,4 +58,13 @@ public class DataTask extends DataInfo {
 
 		return true;
 	}
+
+	public boolean isExpired(int expireDelayTime ) {
+		// 데이터 만료 시점은 노드가 데이터를 복제받은 시점이 아니라. 데이터가 생성된 시간을 기준으로 한다.
+		// (모든 노드에서 동시에 데이터가 무효화됨.)
+		long now = System.currentTimeMillis();
+		long due = createTime + (expireDelayTime * 1000);
+
+		return now > due;
+	}
 }

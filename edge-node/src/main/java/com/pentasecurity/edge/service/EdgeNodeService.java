@@ -35,6 +35,8 @@ public class EdgeNodeService {
     private int copyDelayTime;
     @Value("${edge.copy-2nd-rate}")
     private double copy2ndRate;
+    @Value("${edge.expire-delay-time}")
+    private int expireDelayTime;
 
     private String[] nodes = null;
     private String[] gates = null;
@@ -150,10 +152,18 @@ public class EdgeNodeService {
 	 * @param dataTask
 	 */
 	private void removeDataTask(DataTask dataTask) {
-		if ( dataTask.isDone(gates.length, nodes.length) ) {
+		// 데이터 복제가 완료된 시점에서 dataTask에서 데이터를 삭제한다.
+//		if ( dataTask.isDone(gates.length, nodes.length) ) {
+//			taskStorage.remove(dataTask.getDataId());
+//
+//			logger.debug(edgeId+" : done");
+//		}
+
+		// 데이터 사용을 위해 데이터 복제 완료 여부와 관계없이 데이터 유지 시간이 지난 후 dataTask에서 데이터를 삭제한다.
+		if ( dataTask.isExpired(expireDelayTime) ) {
 			taskStorage.remove(dataTask.getDataId());
 
-			logger.debug(edgeId+" : done");
+			logger.debug(edgeId+" : expired");
 		}
 	}
 
