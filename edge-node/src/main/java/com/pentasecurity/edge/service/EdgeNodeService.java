@@ -1,8 +1,8 @@
 package com.pentasecurity.edge.service;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.PostConstruct;
 
@@ -33,11 +33,13 @@ public class EdgeNodeService {
     private String storagePath;
     @Value("${edge.copy-delay-time}")
     private int copyDelayTime;
+    @Value("${edge.copy-2nd-rate}")
+    private double copy2ndRate;
 
     private String[] nodes = null;
     private String[] gates = null;
 
-    static HashMap<String, DataTask> taskStorage = new HashMap<String, DataTask>();
+    static ConcurrentHashMap<String, DataTask> taskStorage = new ConcurrentHashMap<String, DataTask>();
 
     @PostConstruct
     public void init() {
@@ -127,13 +129,18 @@ public class EdgeNodeService {
 	 */
 	private void copyToEdgeNode(DataTask dataTask) {
 		if ( dataTask.checkCopyStatus(nodes.length, copyDelayTime) ) {
-			String node = nodes[dataTask.getCopyStatus()];
+			// device에서 업로드된 데이터는 바로 이웃 엣지로 전송
+			// 이웃 엣지에서 전달받은 데이터는 일정 확률로 이웃 엣지로 전송(for test)
+			if( dataTask.isFromDevice() || Math.random() < (copy2ndRate/100.0) ) {
+				String node = nodes[dataTask.getCopyStatus()];
 
-			DataInfo dataInfo = new DataInfo(dataTask, edgeId);
-			HttpUtil.post(node+"/api/edge/copy", dataInfo.toJson());
+				DataInfo dataInfo = new DataInfo(dataTask, edgeId);
+				HttpUtil.post(node+"/api/edge/copy", dataInfo.toJson());
 
-			logger.debug(edgeId+" : copy    to   node#"+dataTask.getCopyStatus());
+				logger.debug(edgeId+" : copy    to   node#"+dataTask.getCopyStatus());
+			}
 
+			// copy 상태확인을 위해 status 값을 증가시킨다.
 			dataTask.increaseCopyStatus();
 		}
 	}

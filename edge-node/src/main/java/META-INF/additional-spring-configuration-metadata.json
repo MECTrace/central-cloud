@@ -23,5 +23,10 @@
     "name": "edge.copy-delay-time",
     "type": "java.lang.String",
     "description": "upload된 데이터를 copy 하는게 걸리는 지연 시간(초)"
+  },
+  {
+    "name": "edge.copy-2nd-rate",
+    "type": "java.lang.String",
+    "description": "이웃 노드에서 복제된 data를 다시 재복재할 확률(%)"
   }
 ]}
