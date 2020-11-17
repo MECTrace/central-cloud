@@ -26,6 +26,12 @@ public class DataHistory extends BaseModel {
 			this.toType = "device";
 			toId = dataTask.getToId();
 			this.trace = "use";
+		} else if ( dataTask.getTaskType() == EdgeNodeService.DATA_TASK_TYPE_DELETE ) {
+			this.fromType = "edge";
+			fromId = edgeId;
+			this.toType = "";
+			toId = "";
+			this.trace = "delete";
 		}
 		receivedTime = System.currentTimeMillis();
 	}

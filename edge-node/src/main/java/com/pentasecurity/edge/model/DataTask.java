@@ -30,6 +30,19 @@ public class DataTask extends DataInfo {
 		this.toId = toId;
 	}
 
+	public DataTask(String dataId, String fromId, int taskType) {
+		this.dataId = dataId;
+		dataFormat = "";
+	    deviceId = "";
+	    fromId = "";
+	    createTime = 0;
+	    data = "";
+		timestamp = System.currentTimeMillis();
+		this.taskType = taskType;
+		historyStatus = 0;
+		copyStatus = 0;
+	}
+
 	long timestamp;
 	int taskType;
 	String toId;

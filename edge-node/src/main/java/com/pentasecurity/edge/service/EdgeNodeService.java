@@ -27,6 +27,7 @@ public class EdgeNodeService {
 	static final public int DATA_TASK_TYPE_UPLOAD = 1;
 	static final public int DATA_TASK_TYPE_COPY = 2;
 	static final public int DATA_TASK_TYPE_DOWNLOAD = 3;
+	static final public int DATA_TASK_TYPE_DELETE = 4;
 
 	@Value("${edge.edge-id}")
     private String edgeId;
@@ -113,6 +114,33 @@ public class EdgeNodeService {
 	}
 
 	/**
+	 * @param deviceId
+	 * @return
+	 */
+	public void delete(String dataId) {
+		try {
+			File file = new File(storagePath+"/"+dataId+".data");
+			if ( file.exists() ) {
+				logger.debug(String.format("%10s %10s %5s %10s", edgeId, "delete", "data", dataId));
+
+				file.delete();
+
+				if ( taskStorage.contains(dataId) ) {
+					DataTask dataTask = taskStorage.get(dataId);
+					if ( dataTask.getTaskType() != DATA_TASK_TYPE_DELETE ) {
+						taskStorage.remove(dataId);
+					}
+				}
+
+				DataTask dataTask2 = new DataTask(dataId, edgeId, DATA_TASK_TYPE_DELETE);
+				taskStorage.put(dataId, dataTask2);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
 	 * taskStorage에 저장된 task들을 처리한다.
 	 */
 	public void processTask() {
@@ -125,6 +153,7 @@ public class EdgeNodeService {
 				if ( dataTask != null ) {
 					reportToCentralGateway(dataTask);
 					copyToEdgeNode(dataTask);
+					deleteToEdgeNode(dataTask);
 					removeDataTask(dataTask);
 				}
 			}
@@ -158,7 +187,13 @@ public class EdgeNodeService {
 			} else if ( dataTask.getTaskType() == DATA_TASK_TYPE_DOWNLOAD ) {
 				logger.debug(String.format("%10s %10s %5s %10s", edgeId, "use", "to", "gateway"));
 
-				// 이웃 엣지 노드에서 복제받은 데이터를 보고
+				// 단말기가 다운로드 받은 데이터를 보고
+				DataHistory dataHistory = new DataHistory(dataTask, edgeId);
+	        	HttpUtil.post(gate+"/api/gw/history", dataHistory.toJson());
+			} else if ( dataTask.getTaskType() == DATA_TASK_TYPE_DELETE ) {
+				logger.debug(String.format("%10s %10s %5s %10s", edgeId, "delete", "to", "gateway"));
+
+				// 데이터 삭제를 보고
 				DataHistory dataHistory = new DataHistory(dataTask, edgeId);
 	        	HttpUtil.post(gate+"/api/gw/history", dataHistory.toJson());
 			}
@@ -185,6 +220,22 @@ public class EdgeNodeService {
 
 			// copy 상태확인을 위해 status 값을 증가시킨다.
 			dataTask.increaseCopyStatus();
+		}
+	}
+
+	/**
+	 * 이웃 node에 데이터를 전달한다.
+	 * @param dataTask
+	 */
+	private void deleteToEdgeNode(DataTask dataTask) {
+		if( dataTask.getTaskType() == DATA_TASK_TYPE_DELETE ) {
+			for(int i=0;i<nodes.length;i++) {
+				String node = nodes[i];
+				logger.debug(String.format("%10s %10s %5s %10s", edgeId, "delete", "to", "node#"+i));
+
+				DataInfo dataInfo = new DataInfo(dataTask, edgeId);
+				HttpUtil.post(node+"/api/edge/delete", dataInfo.toJson());
+			}
 		}
 	}
 

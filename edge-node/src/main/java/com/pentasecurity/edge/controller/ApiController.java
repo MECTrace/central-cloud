@@ -1,7 +1,6 @@
 package com.pentasecurity.edge.controller;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,18 +68,36 @@ public class ApiController {
 
     @PostMapping("/download")
     @ResponseBody
-    public DataUseApiResponse download(@RequestBody HashMap<String, String> request) {
+    public DataUseApiResponse download(@RequestBody DataInfo dataInfo) {
     	DataUseApiResponse apiResponse = new DataUseApiResponse(-99, "error");
-    	String deviceId = request.get("deviceId");
 
-    	logger.debug(String.format("%10s %10s %5s %10s", edgeId, "download", "to", deviceId));
+    	logger.debug(String.format("%10s %10s %5s %10s", edgeId, "download", "to", dataInfo.getDeviceId()));
 
     	try {
-    		ArrayList<String> data = edgeNodeService.download(deviceId);
+    		ArrayList<String> data = edgeNodeService.download(dataInfo.getDeviceId());
 
         	apiResponse.setCode(0);
         	apiResponse.setMessage("OK");
         	apiResponse.setData(data);
+    	} catch (Exception e) {
+    		e.printStackTrace();
+    	}
+
+        return apiResponse;
+    }
+
+    @PostMapping("/delete")
+    @ResponseBody
+    public ApiResponse delete(@RequestBody DataInfo dataInfo) {
+    	ApiResponse apiResponse = new ApiResponse(-99, "error");
+
+    	logger.debug(String.format("%10s %10s %5s %10s", edgeId, "delete", "from", dataInfo.getDeviceId()));
+
+    	try {
+    		edgeNodeService.delete(dataInfo.getDataId());
+
+        	apiResponse.setCode(0);
+        	apiResponse.setMessage("OK");
     	} catch (Exception e) {
     		e.printStackTrace();
     	}
