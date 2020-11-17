@@ -13,5 +13,10 @@
     "name": "edge.node-list",
     "type": "java.lang.String",
     "description": "사용 가능한 edge node list"
+  },
+  {
+    "name": "edge.data-download-rate",
+    "type": "java.lang.Double",
+    "description": "스케쥴잡에서 데이터 다운로드를 요청할 확률(%)"
   }
 ]}

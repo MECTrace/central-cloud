@@ -3,6 +3,7 @@ package com.pentasecurity.edge.scheduled;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -13,6 +14,9 @@ import com.pentasecurity.edge.service.CreateDataService;
 @Component
 public class CreateDataJob1 {
     Logger logger = LoggerFactory.getLogger("mainLogger");
+
+    @Value("${edge.data-download-rate}")
+    private double dataDownloadRate;
 
     @Autowired
     CreateDataService createDataService;
@@ -34,6 +38,8 @@ public class CreateDataJob1 {
     @Scheduled(cron="0 35 * * * *")
     public void job2()
     {
-    	createDataService.downloadData();
+    	if ( Math.random() < (dataDownloadRate/100.0) ) {
+        	createDataService.downloadData();
+    	}
     }
 }
