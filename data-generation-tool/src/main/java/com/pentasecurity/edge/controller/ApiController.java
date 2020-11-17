@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.pentasecurity.edge.model.response.ApiResponse;
-import com.pentasecurity.edge.service.CreateDataService;
+import com.pentasecurity.edge.service.EdgeDataService;
 
 @Controller
 @RequestMapping("/api/device")
@@ -19,7 +19,7 @@ public class ApiController {
     Logger logger = LoggerFactory.getLogger("mainLogger");
 
     @Autowired
-    CreateDataService createDataService;
+    EdgeDataService edgeDataService;
 
     @GetMapping("/create/data")
     @ResponseBody
@@ -27,12 +27,10 @@ public class ApiController {
     	ApiResponse apiResponse = new ApiResponse(-99, "error");
 
     	try {
-    		createDataService.createData();
+    		edgeDataService.createData();
 
         	apiResponse.setCode(0);
         	apiResponse.setMessage("OK");
-
-
     	} catch (Exception e) {
     		e.printStackTrace();
     	}
@@ -46,12 +44,10 @@ public class ApiController {
     	ApiResponse apiResponse = new ApiResponse(-99, "error");
 
     	try {
-    		createDataService.downloadData();
+    		edgeDataService.downloadData();
 
         	apiResponse.setCode(0);
         	apiResponse.setMessage("OK");
-
-
     	} catch (Exception e) {
     		e.printStackTrace();
     	}

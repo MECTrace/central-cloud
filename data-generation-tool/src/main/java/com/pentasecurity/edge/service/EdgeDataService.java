@@ -17,7 +17,7 @@ import com.pentasecurity.edge.util.DataUtil;
 import com.pentasecurity.edge.util.HttpUtil;
 
 @Service
-public class CreateDataService
+public class EdgeDataService
 {
 	Logger logger = LoggerFactory.getLogger("mainLogger");
 
@@ -27,6 +27,8 @@ public class CreateDataService
     private String nodeList;
 
     private String[] nodes = null;
+    private String recentDataId = null;
+    private int recentNodeNo = 0;
 
     @PostConstruct
     public void init() {
@@ -45,9 +47,13 @@ public class CreateDataService
     			String data = DataUtil.make(100);
     			DataInfo dataInfo = new DataInfo(deviceId, data);
 
-        		String node = nodes[(int)Math.floor(Math.random()*nodes.length)];
+    			int nodeNo = (int)Math.floor(Math.random()*nodes.length);
+        		String node = nodes[nodeNo];
 
         		HttpUtil.post(node+"/api/edge/upload", dataInfo.toJson());
+
+        		recentDataId = dataInfo.getDataId();
+        		recentNodeNo = nodeNo;
         	}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -66,6 +72,22 @@ public class CreateDataService
         	DataUseApiResponse response = DataUseApiResponse.fromJson(resonseBody, DataUseApiResponse.class);
 
         	logger.debug(String.format("%10s %10s %5s %10s", deviceId, "download", "data", response.toJson()));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void deleteData() {
+		try {
+        	if ( !StringUtils.isEmpty(recentDataId) ) {
+        		logger.debug(String.format("%10s %10s %5s %10s", deviceId, "delete", "data", ""));
+
+    			DataInfo dataInfo = new DataInfo(recentDataId, deviceId, "");
+
+        		String node = nodes[recentNodeNo];
+
+        		HttpUtil.post(node+"/api/edge/delete", dataInfo.toJson());
+        	}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

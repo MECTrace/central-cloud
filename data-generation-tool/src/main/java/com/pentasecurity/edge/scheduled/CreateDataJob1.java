@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import com.pentasecurity.edge.service.CreateDataService;
+import com.pentasecurity.edge.service.EdgeDataService;
 
 @Profile("AutoDataCreator1")
 @Component
@@ -17,9 +17,11 @@ public class CreateDataJob1 {
 
     @Value("${edge.data-download-rate}")
     private double dataDownloadRate;
+    @Value("${edge.data-delete-rate}")
+    private double dataDeleteRate;
 
     @Autowired
-    CreateDataService createDataService;
+    EdgeDataService edgeDataService;
 
     /**
      * 1시간마다 실행
@@ -28,7 +30,19 @@ public class CreateDataJob1 {
     @Scheduled(cron="0 0 * * * *")
     public void job()
     {
-    	createDataService.createData();
+    	edgeDataService.createData();
+    }
+
+    /**
+     * 1시간마다 실행
+     * 초 분 시 일 월 요일
+     */
+    @Scheduled(cron="0 8 * * * *")
+    public void job3()
+    {
+    	if ( Math.random() < (dataDeleteRate/100.0) ) {
+    		edgeDataService.deleteData();
+    	}
     }
 
     /**
@@ -39,7 +53,7 @@ public class CreateDataJob1 {
     public void job2()
     {
     	if ( Math.random() < (dataDownloadRate/100.0) ) {
-        	createDataService.downloadData();
+    		edgeDataService.downloadData();
     	}
     }
 }
