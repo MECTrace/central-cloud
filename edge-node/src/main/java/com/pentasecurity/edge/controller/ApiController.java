@@ -34,7 +34,7 @@ public class ApiController {
     public ApiResponse upload(@RequestBody DataInfo dataInfo) {
     	ApiResponse apiResponse = new ApiResponse(-99, "error");
 
-    	logger.debug(edgeId+" : upload   from "+dataInfo.getDeviceId());
+    	logger.debug(String.format("%10s %10s %5s %10s", edgeId, "upload", "from", dataInfo.getDeviceId()));
 
     	try {
     		edgeNodeService.putToCache(dataInfo, EdgeNodeService.DATA_TASK_TYPE_UPLOAD);
@@ -53,7 +53,7 @@ public class ApiController {
     public ApiResponse copy(@RequestBody DataInfo dataInfo) {
     	ApiResponse apiResponse = new ApiResponse(-99, "error");
 
-    	logger.debug(edgeId+" : copy     from "+dataInfo.getFromId());
+    	logger.debug(String.format("%10s %10s %5s %10s", edgeId, "copy", "from", dataInfo.getFromId()));
 
     	try {
     		edgeNodeService.putToCache(dataInfo, EdgeNodeService.DATA_TASK_TYPE_COPY);
@@ -71,11 +71,12 @@ public class ApiController {
     @ResponseBody
     public DataUseApiResponse download(@RequestBody HashMap<String, String> request) {
     	DataUseApiResponse apiResponse = new DataUseApiResponse(-99, "error");
+    	String deviceId = request.get("deviceId");
 
-    	logger.debug(edgeId+" : download to   "+request.get("deviceId"));
+    	logger.debug(String.format("%10s %10s %5s %10s", edgeId, "download", "to", deviceId));
 
     	try {
-    		ArrayList<String> data = edgeNodeService.download(request.get("deviceId"));
+    		ArrayList<String> data = edgeNodeService.download(deviceId);
 
         	apiResponse.setCode(0);
         	apiResponse.setMessage("OK");

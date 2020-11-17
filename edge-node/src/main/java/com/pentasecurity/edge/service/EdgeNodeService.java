@@ -144,23 +144,23 @@ public class EdgeNodeService {
 	    	String gate = gates[(int)Math.floor(Math.random()*gates.length)];
 
 			if ( dataTask.getTaskType() == DATA_TASK_TYPE_UPLOAD ) {
+		    	logger.debug(String.format("%10s %10s %5s %10s", edgeId, "upload", "to", "gateway"));
+
 		    	// 디바이스에서 직접 올라온 데이터를 보고
 				DataInfoAndHistory dataInfoAndHistory = new DataInfoAndHistory(dataTask, edgeId);
 		    	HttpUtil.post(gate+"/api/gw/upload", dataInfoAndHistory.toJson());
-
-		    	logger.debug(edgeId+" : upload   to   gateway");
 			} else if ( dataTask.getTaskType() == DATA_TASK_TYPE_COPY ) {
+				logger.debug(String.format("%10s %10s %5s %10s", edgeId, "copy", "to", "gateway"));
+
 				// 이웃 엣지 노드에서 복제받은 데이터를 보고
 				DataHistory dataHistory = new DataHistory(dataTask, edgeId);
 	        	HttpUtil.post(gate+"/api/gw/history", dataHistory.toJson());
-
-	        	logger.debug(edgeId+" : history  to   gateway(copy)");
 			} else if ( dataTask.getTaskType() == DATA_TASK_TYPE_DOWNLOAD ) {
+				logger.debug(String.format("%10s %10s %5s %10s", edgeId, "use", "to", "gateway"));
+
 				// 이웃 엣지 노드에서 복제받은 데이터를 보고
 				DataHistory dataHistory = new DataHistory(dataTask, edgeId);
 	        	HttpUtil.post(gate+"/api/gw/history", dataHistory.toJson());
-
-	        	logger.debug(edgeId+" : history  to   gateway(use)");
 			}
 		}
 		dataTask.setHistoryStatus(1);
@@ -175,12 +175,12 @@ public class EdgeNodeService {
 			// device에서 업로드된 데이터는 바로 이웃 엣지로 전송
 			// 이웃 엣지에서 전달받은 데이터는 일정 확률로 이웃 엣지로 전송(for test)
 			if( dataTask.getTaskType() == DATA_TASK_TYPE_UPLOAD || (dataTask.getTaskType() == DATA_TASK_TYPE_COPY && Math.random() < (copy2ndRate/100.0)) ) {
+				logger.debug(String.format("%10s %10s %5s %10s", edgeId, "copy", "to", "node#"+dataTask.getCopyStatus()));
+
 				String node = nodes[dataTask.getCopyStatus()];
 
 				DataInfo dataInfo = new DataInfo(dataTask, edgeId);
 				HttpUtil.post(node+"/api/edge/copy", dataInfo.toJson());
-
-				logger.debug(edgeId+" : copy     to   node#"+dataTask.getCopyStatus());
 			}
 
 			// copy 상태확인을 위해 status 값을 증가시킨다.
@@ -204,7 +204,7 @@ public class EdgeNodeService {
 		if ( dataTask.isExpired(gates.length, nodes.length, expireDelayTime) ) {
 			taskStorage.remove(dataTask.getDataId());
 
-			logger.debug(edgeId+" : task "+dataTask.getTaskType()+"    is   expired");
+			logger.debug(String.format("%10s %10s %5s %10s", edgeId, "task"+dataTask.getTaskType(), "is", "expired"));
 		}
 	}
 
