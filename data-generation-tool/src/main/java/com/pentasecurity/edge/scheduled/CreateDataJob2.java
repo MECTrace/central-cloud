@@ -26,4 +26,14 @@ public class CreateDataJob2 {
     {
     	createDataService.createData();
     }
+
+    /**
+     * 1시간마다 실행
+     * 초 분 시 일 월 요일
+     */
+    @Scheduled(cron="0 5 * * * *")
+    public void job2()
+    {
+    	createDataService.downloadData();
+    }
 }
