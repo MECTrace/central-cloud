@@ -40,6 +40,8 @@ public class CreateDataService
 	public void createData() {
 		try {
         	if ( nodes.length > 0 ) {
+        		logger.debug(String.format("%10s %10s %5s %10s", deviceId, "create", "data", ""));
+
     			String data = DataUtil.make(100);
     			DataInfo dataInfo = new DataInfo(deviceId, data);
 
@@ -63,7 +65,7 @@ public class CreateDataService
         	String resonseBody = HttpUtil.post(node+"/api/edge/download", gson.toJson(requestBody));
         	DataUseApiResponse response = DataUseApiResponse.fromJson(resonseBody, DataUseApiResponse.class);
 
-        	logger.debug(response.toJson());
+        	logger.debug(String.format("%10s %10s %5s %10s", deviceId, "download", "data", response.toJson()));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
