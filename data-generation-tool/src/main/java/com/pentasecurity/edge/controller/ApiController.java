@@ -39,4 +39,23 @@ public class ApiController {
 
         return apiResponse;
     }
+
+    @GetMapping("/download/data")
+    @ResponseBody
+    public ApiResponse downloadData(HttpServletRequest request) {
+    	ApiResponse apiResponse = new ApiResponse(-99, "error");
+
+    	try {
+    		createDataService.downloadData();
+
+        	apiResponse.setCode(0);
+        	apiResponse.setMessage("OK");
+
+
+    	} catch (Exception e) {
+    		e.printStackTrace();
+    	}
+
+        return apiResponse;
+    }
 }
