@@ -21,17 +21,17 @@
   },
   {
     "name": "edge.copy-delay-time",
-    "type": "java.lang.String",
+    "type": "java.lang.Integer",
     "description": "upload된 데이터를 copy 하는게 걸리는 지연 시간(초)"
   },
   {
     "name": "edge.copy-2nd-rate",
-    "type": "java.lang.String",
-    "description": "이웃 노드에서 복제된 data를 다시 재복재할 확률(%)"
+    "type": "java.lang.Double",
+    "description": "이웃 노드에서 복제된 data를 다시 복제할 확률(%)"
   },
   {
     "name": "edge.expire-delay-time",
-    "type": "java.lang.String",
+    "type": "java.lang.Integer",
     "description": "데이터 사용을 위해 데이터 복제 완료 여부와 관계없이 데이터 유지 시간이 지난 후 dataTask에서 데이터를 삭제한다(초)"
   }
 ]}
