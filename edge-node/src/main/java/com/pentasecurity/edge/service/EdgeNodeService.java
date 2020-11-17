@@ -1,6 +1,7 @@
 package com.pentasecurity.edge.service;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -22,6 +23,10 @@ import com.pentasecurity.edge.util.HttpUtil;
 @Service
 public class EdgeNodeService {
 	Logger logger = LoggerFactory.getLogger("mainLogger");
+
+	static final public int DATA_TASK_TYPE_UPLOAD = 1;
+	static final public int DATA_TASK_TYPE_COPY = 2;
+	static final public int DATA_TASK_TYPE_DOWNLOAD = 3;
 
 	@Value("${edge.edge-id}")
     private String edgeId;
@@ -63,18 +68,48 @@ public class EdgeNodeService {
 	 * @param dataInfo
 	 * @param fromDevice
 	 */
-	public void putToCache(DataInfo dataInfo, boolean fromDevice) {
-		// 이미 데이터를 받은 경우
-		if ( !write(dataInfo.getDataId(), dataInfo.getData()) ) {
-			return;
+	public void putToCache(DataInfo dataInfo, int taskType) {
+		if ( taskType == DATA_TASK_TYPE_UPLOAD || taskType == DATA_TASK_TYPE_COPY ) {
+			// 이미 데이터를 받은 경우
+			if ( !write(dataInfo.getDataId(), dataInfo.getData()) ) {
+				return;
+			}
+
+			try {
+				DataTask dataTask = new DataTask(dataInfo, taskType);
+				taskStorage.put(dataInfo.getDataId(), dataTask);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
+	}
+
+	/**
+	 * @param deviceId
+	 * @return
+	 */
+	public ArrayList<String> download(String deviceId) {
+		ArrayList<String> data = new ArrayList<String>();
 
 		try {
-			DataTask dataTask = new DataTask(dataInfo, fromDevice);
-			taskStorage.put(dataInfo.getDataId(), dataTask);
+			Set<String> dataIdSet = taskStorage.keySet();
+
+			for(String dataId : dataIdSet) {
+				DataTask dataTask = taskStorage.get(dataId);
+
+				if ( dataTask != null && !dataTask.getDeviceId().equals(deviceId) ) {
+					DataInfo dataInfo = new DataInfo(dataTask);
+					DataTask newDataTask = new DataTask(dataInfo, DATA_TASK_TYPE_DOWNLOAD, deviceId);
+
+					data.add(dataInfo.toJson());
+					taskStorage.put(dataInfo.getDataId(), newDataTask);
+				}
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+
+		return data;
 	}
 
 	/**
@@ -108,18 +143,24 @@ public class EdgeNodeService {
 			// 여러개의 게이트가 등록되어 있다면 임의로 1개를 선택한다.
 	    	String gate = gates[(int)Math.floor(Math.random()*gates.length)];
 
-			if ( dataTask.isFromDevice() ) {
+			if ( dataTask.getTaskType() == DATA_TASK_TYPE_UPLOAD ) {
 		    	// 디바이스에서 직접 올라온 데이터를 보고
 				DataInfoAndHistory dataInfoAndHistory = new DataInfoAndHistory(dataTask, edgeId);
 		    	HttpUtil.post(gate+"/api/gw/upload", dataInfoAndHistory.toJson());
 
-		    	logger.debug(edgeId+" : upload  to   gateway");
-			} else {
+		    	logger.debug(edgeId+" : upload   to   gateway");
+			} else if ( dataTask.getTaskType() == DATA_TASK_TYPE_COPY ) {
 				// 이웃 엣지 노드에서 복제받은 데이터를 보고
 				DataHistory dataHistory = new DataHistory(dataTask, edgeId);
 	        	HttpUtil.post(gate+"/api/gw/history", dataHistory.toJson());
 
-	        	logger.debug(edgeId+" : history to   gateway");
+	        	logger.debug(edgeId+" : history  to   gateway(copy)");
+			} else if ( dataTask.getTaskType() == DATA_TASK_TYPE_DOWNLOAD ) {
+				// 이웃 엣지 노드에서 복제받은 데이터를 보고
+				DataHistory dataHistory = new DataHistory(dataTask, edgeId);
+	        	HttpUtil.post(gate+"/api/gw/history", dataHistory.toJson());
+
+	        	logger.debug(edgeId+" : history  to   gateway(use)");
 			}
 		}
 		dataTask.setHistoryStatus(1);
@@ -133,13 +174,13 @@ public class EdgeNodeService {
 		if ( dataTask.checkCopyStatus(nodes.length, copyDelayTime) ) {
 			// device에서 업로드된 데이터는 바로 이웃 엣지로 전송
 			// 이웃 엣지에서 전달받은 데이터는 일정 확률로 이웃 엣지로 전송(for test)
-			if( dataTask.isFromDevice() || Math.random() < (copy2ndRate/100.0) ) {
+			if( dataTask.getTaskType() == DATA_TASK_TYPE_UPLOAD || (dataTask.getTaskType() == DATA_TASK_TYPE_COPY && Math.random() < (copy2ndRate/100.0)) ) {
 				String node = nodes[dataTask.getCopyStatus()];
 
 				DataInfo dataInfo = new DataInfo(dataTask, edgeId);
 				HttpUtil.post(node+"/api/edge/copy", dataInfo.toJson());
 
-				logger.debug(edgeId+" : copy    to   node#"+dataTask.getCopyStatus());
+				logger.debug(edgeId+" : copy     to   node#"+dataTask.getCopyStatus());
 			}
 
 			// copy 상태확인을 위해 status 값을 증가시킨다.
@@ -160,10 +201,10 @@ public class EdgeNodeService {
 //		}
 
 		// 데이터 사용을 위해 데이터 복제 완료 여부와 관계없이 데이터 유지 시간이 지난 후 dataTask에서 데이터를 삭제한다.
-		if ( dataTask.isExpired(expireDelayTime) ) {
+		if ( dataTask.isExpired(gates.length, nodes.length, expireDelayTime) ) {
 			taskStorage.remove(dataTask.getDataId());
 
-			logger.debug(edgeId+" : expired");
+			logger.debug(edgeId+" : task "+dataTask.getTaskType()+"    is   expired");
 		}
 	}
 

@@ -11,10 +11,14 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper=false)
 public class DataInfo extends BaseModel {
 	public DataInfo(DataTask dataTask, String edgeId) {
+		this(dataTask);
+	    fromId = edgeId;
+	}
+
+	public DataInfo(DataTask dataTask) {
 		dataId = dataTask.getDataId();
 		dataFormat = dataTask.getDataFormat();
 	    deviceId = dataTask.getDeviceId();
-	    fromId = edgeId;
 	    createTime = dataTask.getCreateTime();
 	    data = dataTask.getData();
 	}

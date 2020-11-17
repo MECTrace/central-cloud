@@ -1,5 +1,7 @@
 package com.pentasecurity.edge.model;
 
+import com.pentasecurity.edge.service.EdgeNodeService;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -12,11 +14,19 @@ import lombok.NoArgsConstructor;
 public class DataHistory extends BaseModel {
 	public DataHistory(DataTask dataTask, String edgeId) {
 		dataId = dataTask.getDataId();
-		fromType = "edge";
-		fromId = dataTask.getFromId();
-		toType = "edge";
-		toId = edgeId;
-		trace = "copy";
+		if ( dataTask.getTaskType() == EdgeNodeService.DATA_TASK_TYPE_COPY ) {
+			this.fromType = "edge";
+			fromId = dataTask.getFromId();
+			this.toType = "edge";
+			toId = edgeId;
+			this.trace = "copy";
+		} else if ( dataTask.getTaskType() == EdgeNodeService.DATA_TASK_TYPE_DOWNLOAD ) {
+			this.fromType = "edge";
+			fromId = edgeId;
+			this.toType = "device";
+			toId = dataTask.getToId();
+			this.trace = "use";
+		}
 		receivedTime = System.currentTimeMillis();
 	}
 
