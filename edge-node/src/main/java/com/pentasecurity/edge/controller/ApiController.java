@@ -91,7 +91,7 @@ public class ApiController {
     public ApiResponse delete(@RequestBody DataInfo dataInfo) {
     	ApiResponse apiResponse = new ApiResponse(-99, "error");
 
-    	logger.debug(String.format("%10s %10s %5s %10s", edgeId, "delete", "from", dataInfo.getDeviceId()));
+    	logger.debug(String.format("%10s %10s %5s %10s", edgeId, "delete", "from", dataInfo.getFromId()));
 
     	try {
     		edgeNodeService.delete(dataInfo.getDataId());
