@@ -12,3 +12,4 @@ temp
 */src/main/resources/*.dev.properties
 */*.log
 */storage/*.data
+*/*.jceks
