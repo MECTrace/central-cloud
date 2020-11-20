@@ -30,30 +30,6 @@ public class CreateDataJob2 {
     @Scheduled(cron="0 30 * * * *")
     public void job()
     {
-    	edgeDataService.createData();
-    }
-
-    /**
-     * 1시간마다 실행
-     * 초 분 시 일 월 요일
-     */
-    @Scheduled(cron="0 38 * * * *")
-    public void job3()
-    {
-    	if ( Math.random() < (dataDeleteRate/100.0) ) {
-    		edgeDataService.deleteData();
-    	}
-    }
-
-    /**
-     * 1시간마다 실행
-     * 초 분 시 일 월 요일
-     */
-    @Scheduled(cron="0 5 * * * *")
-    public void job2()
-    {
-    	if ( Math.random() < (dataDownloadRate/100.0) ) {
-    		edgeDataService.downloadData();
-    	}
+    	edgeDataService.registerUploadTask(10, 10, 100, 200, true);
     }
 }

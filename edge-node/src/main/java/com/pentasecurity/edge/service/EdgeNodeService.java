@@ -90,6 +90,28 @@ public class EdgeNodeService {
 	}
 
 	/**
+	 * taskStorage에 저장된 task들을 처리한다.
+	 */
+	public void processTask() {
+		try {
+			Set<String> dataIdSet = taskStorage.keySet();
+
+			for(String dataId : dataIdSet) {
+				DataTask dataTask = taskStorage.get(dataId);
+
+				if ( dataTask != null ) {
+					reportToCentralGateway(dataTask);
+					copyToEdgeNode(dataTask);
+					deleteToEdgeNode(dataTask);
+					removeDataTask(dataTask);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
 	 * @param deviceId
 	 * @return
 	 */
@@ -138,28 +160,6 @@ public class EdgeNodeService {
 
 				DataTask dataTask2 = new DataTask(dataId, edgeId, DATA_TASK_TYPE_DELETE);
 				taskStorage.put(dataId, dataTask2);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	/**
-	 * taskStorage에 저장된 task들을 처리한다.
-	 */
-	public void processTask() {
-		try {
-			Set<String> dataIdSet = taskStorage.keySet();
-
-			for(String dataId : dataIdSet) {
-				DataTask dataTask = taskStorage.get(dataId);
-
-				if ( dataTask != null ) {
-					reportToCentralGateway(dataTask);
-					copyToEdgeNode(dataTask);
-					deleteToEdgeNode(dataTask);
-					removeDataTask(dataTask);
-				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

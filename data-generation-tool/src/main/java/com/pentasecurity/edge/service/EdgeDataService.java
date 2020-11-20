@@ -1,25 +1,30 @@
 package com.pentasecurity.edge.service;
 
-import java.util.HashMap;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.PostConstruct;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.google.gson.Gson;
+import com.pentasecurity.edge.model.DataDownloadRequest;
 import com.pentasecurity.edge.model.DataInfo;
+import com.pentasecurity.edge.model.DataTask;
+import com.pentasecurity.edge.model.DataUploadRequest;
 import com.pentasecurity.edge.model.response.DataUseApiResponse;
 import com.pentasecurity.edge.util.DataUtil;
+import com.pentasecurity.edge.util.EdgeLogUtil;
 import com.pentasecurity.edge.util.HttpUtil;
 
 @Service
 public class EdgeDataService
 {
-	Logger logger = LoggerFactory.getLogger("mainLogger");
+	static final public int DATA_TASK_TYPE_UPLOAD = 1;
+	static final public int DATA_TASK_TYPE_COPY = 2;
+	static final public int DATA_TASK_TYPE_DOWNLOAD = 3;
+	static final public int DATA_TASK_TYPE_DELETE = 4;
 
     @Value("${edge.device-id}")
     private String deviceId;
@@ -27,8 +32,8 @@ public class EdgeDataService
     private String nodeList;
 
     private String[] nodes = null;
-    private String recentDataId = null;
-    private int recentNodeNo = 0;
+
+    static ConcurrentHashMap<String, DataTask> taskStorage = new ConcurrentHashMap<String, DataTask>();
 
     @PostConstruct
     public void init() {
@@ -39,57 +44,95 @@ public class EdgeDataService
     	}
     }
 
-	public void createData() {
-		try {
-        	if ( nodes.length > 0 ) {
-        		logger.debug(String.format("%10s %10s %5s %10s", deviceId, "create", "data", ""));
+    public void registerUploadTask(int maxSendCount, int delay, int minSize, int maxSize, boolean isOnTrace) {
+    	DataTask dataTask = new DataTask(DATA_TASK_TYPE_UPLOAD, maxSendCount, delay, minSize, maxSize, isOnTrace);
 
-    			String data = DataUtil.make(100);
+    	taskStorage.put(dataTask.getTaskId(), dataTask);
+    };
+
+    public void registerDownloadTask(int maxSendCount, int delay, boolean isOnTrace) {
+    	DataTask dataTask = new DataTask(DATA_TASK_TYPE_DOWNLOAD, maxSendCount, delay, 0, 0, isOnTrace);
+
+    	taskStorage.put(dataTask.getTaskId(), dataTask);
+    };
+
+	/**
+	 * taskStorage에 저장된 task들을 처리한다.
+	 */
+	public void processTask() {
+		try {
+			Set<String> taskIdSet = taskStorage.keySet();
+
+			for(String taskId : taskIdSet) {
+				DataTask dataTask = taskStorage.get(taskId);
+
+				if ( dataTask != null ) {
+					uploadToEdge(dataTask);
+					downloadFromEdge(dataTask);
+					removeDataTask(dataTask);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void uploadToEdge(DataTask dataTask) {
+		if ( dataTask.checkUpload() ) {
+			String data = DataUtil.make(dataTask.getRandomDataSize());
+
+			int nodeNo = (int)Math.floor(Math.random()*nodes.length);
+    		String node = nodes[nodeNo];
+
+    		if ( dataTask.isOnTrace() ) {
+    			DataUploadRequest request = new DataUploadRequest(deviceId, data);
+    			HttpUtil.post(node+"/api/edge/upload/traceOn", request.toJson());
+
+    			EdgeLogUtil.log(deviceId, "call", deviceId, node, request.toJson(), dataTask.isOnTrace());
+    		} else {
     			DataInfo dataInfo = new DataInfo(deviceId, data);
+    			HttpUtil.post(node+"/api/edge/upload/traceOff", dataInfo.toJson());
 
-    			int nodeNo = (int)Math.floor(Math.random()*nodes.length);
-        		String node = nodes[nodeNo];
+    			EdgeLogUtil.log(deviceId, "call", deviceId, node, dataInfo.toJson(), dataTask.isOnTrace());
+    		}
 
-        		HttpUtil.post(node+"/api/edge/upload", dataInfo.toJson());
-
-        		recentDataId = dataInfo.getDataId();
-        		recentNodeNo = nodeNo;
-        	}
-		} catch (Exception e) {
-			e.printStackTrace();
+			dataTask.increaseSendCount();
 		}
 	}
 
-	public void downloadData() {
-		try {
-			String node = nodes[(int)Math.floor(Math.random()*nodes.length)];
-			HashMap<String, String> requestBody = new HashMap<String, String>();
-    		Gson gson = new Gson();
+	private void downloadFromEdge(DataTask dataTask) {
+		if ( dataTask.checkUpload() ) {
+			int nodeNo = (int)Math.floor(Math.random()*nodes.length);
+    		String node = nodes[nodeNo];
+    		String responseBody = null;
 
-    		requestBody.put("deviceId", deviceId);
+    		if ( dataTask.isOnTrace() ) {
+    			DataDownloadRequest request = new DataDownloadRequest("device", deviceId);
+    			String url = node+"/api/edge/download/traceOn";
+    			responseBody = HttpUtil.post(url, request.toJson());
 
-        	String resonseBody = HttpUtil.post(node+"/api/edge/download", gson.toJson(requestBody));
-        	DataUseApiResponse response = DataUseApiResponse.fromJson(resonseBody, DataUseApiResponse.class);
+    			EdgeLogUtil.log(deviceId, "call", deviceId, url, request.toJson(), dataTask.isOnTrace());
+    		} else {
+    			DataDownloadRequest request = new DataDownloadRequest(null, deviceId);
+    			String url = node+"/api/edge/download/traceOff";
+    			responseBody = HttpUtil.post(url, request.toJson());
 
-        	logger.debug(String.format("%10s %10s %5s %10s", deviceId, "download", "data", response.toJson()));
-		} catch (Exception e) {
-			e.printStackTrace();
+    			EdgeLogUtil.log(deviceId, "call", deviceId, url, request.toJson(), dataTask.isOnTrace());
+    		}
+
+    		DataUseApiResponse response = DataUseApiResponse.fromJson(responseBody, DataUseApiResponse.class);
+
+			dataTask.increaseSendCount();
+
+			EdgeLogUtil.log(deviceId, "data download done - "+response.getList().size(), dataTask.isOnTrace());
 		}
 	}
 
-	public void deleteData() {
-		try {
-        	if ( !StringUtils.isEmpty(recentDataId) ) {
-        		logger.debug(String.format("%10s %10s %5s %10s", deviceId, "delete", "data", ""));
+	private void removeDataTask(DataTask dataTask) {
+		if ( dataTask.isDone() ) {
+			taskStorage.remove(dataTask.getTaskId());
 
-    			DataInfo dataInfo = new DataInfo(recentDataId, deviceId, "");
-
-        		String node = nodes[recentNodeNo];
-
-        		HttpUtil.post(node+"/api/edge/delete", dataInfo.toJson());
-        	}
-		} catch (Exception e) {
-			e.printStackTrace();
+			EdgeLogUtil.log(deviceId, "task is done : "+dataTask.getTaskId(), dataTask.isOnTrace());
 		}
 	}
 }

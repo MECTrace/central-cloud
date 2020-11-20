@@ -21,13 +21,13 @@ public class ApiController {
     @Autowired
     EdgeDataService edgeDataService;
 
-    @GetMapping("/create/data")
+    @GetMapping("/create/data/traceOn")
     @ResponseBody
-    public ApiResponse createData(HttpServletRequest request) {
+    public ApiResponse createDataTraceOn(HttpServletRequest request) {
     	ApiResponse apiResponse = new ApiResponse(-99, "error");
 
     	try {
-    		edgeDataService.createData();
+    		edgeDataService.registerUploadTask(10, 10, 100, 200, true);
 
         	apiResponse.setCode(0);
         	apiResponse.setMessage("OK");
@@ -38,13 +38,47 @@ public class ApiController {
         return apiResponse;
     }
 
-    @GetMapping("/download/data")
+    @GetMapping("/create/data/traceOff")
     @ResponseBody
-    public ApiResponse downloadData(HttpServletRequest request) {
+    public ApiResponse createDataTraceOff(HttpServletRequest request) {
     	ApiResponse apiResponse = new ApiResponse(-99, "error");
 
     	try {
-    		edgeDataService.downloadData();
+    		edgeDataService.registerUploadTask(10, 10, 100, 200, false);
+
+        	apiResponse.setCode(0);
+        	apiResponse.setMessage("OK");
+    	} catch (Exception e) {
+    		e.printStackTrace();
+    	}
+
+        return apiResponse;
+    }
+
+    @GetMapping("/download/data/traceOn")
+    @ResponseBody
+    public ApiResponse downloadDataTraceOn(HttpServletRequest request) {
+    	ApiResponse apiResponse = new ApiResponse(-99, "error");
+
+    	try {
+    		edgeDataService.registerDownloadTask(10, 60, true);
+
+        	apiResponse.setCode(0);
+        	apiResponse.setMessage("OK");
+    	} catch (Exception e) {
+    		e.printStackTrace();
+    	}
+
+        return apiResponse;
+    }
+
+    @GetMapping("/download/data/traceOff")
+    @ResponseBody
+    public ApiResponse downloadDataTraceOff(HttpServletRequest request) {
+    	ApiResponse apiResponse = new ApiResponse(-99, "error");
+
+    	try {
+    		edgeDataService.registerDownloadTask(10, 60, false);
 
         	apiResponse.setCode(0);
         	apiResponse.setMessage("OK");
