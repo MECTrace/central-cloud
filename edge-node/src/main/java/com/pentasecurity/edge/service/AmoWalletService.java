@@ -5,20 +5,20 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
-import java.util.Arrays;
-import java.util.List;
-
-import javax.annotation.PostConstruct;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.pentasecurity.cryptowallet.JniWrapper;
 import com.pentasecurity.cryptowallet.currencies.amo.AmoApiClient;
 import com.pentasecurity.cryptowallet.network.NetworkService;
 import com.pentasecurity.cryptowallet.network.amo.AmoJsonRpcService;
 import com.pentasecurity.cryptowallet.network.amo.LegacyAmoApiClient;
+import com.pentasecurity.cryptowallet.utils.PcwfUtils;
 import com.pentasecurity.edge.model.AMOWallet;
+import com.pentasecurity.edge.util.ConvertUtils;
 import com.pentasecurity.edge.util.KeyStoreUtil;
 
 @Service
@@ -33,55 +33,40 @@ public class AmoWalletService {
     private String USER = "REPLACED";
     private String PASSWORD = "REPLACED";
 
-    private int storageId = 2147482648; //Integer.MAX_VALUE - 999;
+    private int storageId = 2147482647; //Integer.MAX_VALUE - 1000;
 
-    @PostConstruct
-    public void init() {
-    	try {
-        	createKeyStore();
-    	} catch (Exception e) {
-    		e.printStackTrace();
-    	}
-    }
+	@Value("${edge.edge-id}")
+    private String edgeId;
 
-    public void createKeyStore() throws IOException, GeneralSecurityException {
-        File file = new File(keyStore);
-
-        if (file.exists()) {
-            logger.debug("The keystore exists and cannot be created.");
-        	return;
-        }
-        AMOWallet amoWallet = new AMOWallet(null);
-        String mnemonic = null;  //  or mnemonic list
-        List<String> list = amoWallet.generateMnemonic(mnemonic);
-        KeyStoreUtil.createKeyStore(file, keyStorePW, list);
-        Arrays.fill(keyStorePW, Character.MIN_VALUE);
-        logger.debug(String.format("Key store creation was successful. [%s]", file.getAbsoluteFile()));
-    }
-
-    public void createStorage() throws IOException, GeneralSecurityException {
+    public void registerTx(String dataId) throws GeneralSecurityException, IOException {
         File file = new File(keyStore);
 
         if (false == file.exists()) {
-        	logger.debug("The keystore not exists");
+        	logger.debug(String.format("%10s %10s %5s %10s", edgeId, "keystore", "none", ""));
             return;
         }
 
-        KeyStore keyStore = KeyStoreUtil.loadKeyStore(file, keyStorePW);
+        byte[] parcelID = JniWrapper.GenHashMessage("SHA256", dataId.getBytes());
 
+
+
+        String hexParcelID = PcwfUtils.byteArrayToHexString(ConvertUtils.intToByteArray(storageId)) + PcwfUtils.byteArrayToHexString(parcelID);
+
+        logger.debug(String.format("%10s %10s %5s %10s", edgeId, "amo", "id", hexParcelID));
+
+        KeyStore keyStore = KeyStoreUtil.loadKeyStore(file, keyStorePW);
         AmoApiClient amoApiClient = getApiClient();
         AMOWallet amoWallet = new AMOWallet(amoApiClient);
 
         amoWallet.setKeyStore(keyStore);
-        Arrays.fill(keyStorePW, Character.MIN_VALUE);
 
         AMOWallet.Wallet wallet = amoWallet.getWallet(1L);
-        //HDKeyPair hdKeyPair, WalletAccount account, BigInteger fee, int storageId, String url, BigInteger registration_fee, BigInteger hosting_fee
-        String tx = amoWallet.setup(wallet.hdKeyPair, wallet.account, BigInteger.valueOf(0), storageId, "", BigInteger.valueOf(0), BigInteger.valueOf(0));
-        System.out.println(String.format("StorageID: %d    tx: %s", storageId, tx));
+        //HDKeyPair hdKeyPair, WalletAccount account, BigInteger fee, byte[] custody, String target
+        String tx = amoWallet.register(wallet.hdKeyPair, wallet.account, BigInteger.valueOf(0), dataId.getBytes(), hexParcelID);
+        logger.debug(String.format("%10s %10s %5s %10s", edgeId, "amo", "tx", tx));
     }
 
-    public AmoApiClient getApiClient() {
+    private AmoApiClient getApiClient() {
         AmoJsonRpcService amoJsonRpcService = getService(SERVER_URL, USER, PASSWORD, AmoJsonRpcService.class);
         return new LegacyAmoApiClient(amoJsonRpcService);
     }

@@ -176,31 +176,37 @@ public class EdgeNodeService {
 			// 여러개의 게이트가 등록되어 있다면 임의로 1개를 선택한다.
 	    	String gate = gates[(int)Math.floor(Math.random()*gates.length)];
 
-			if ( dataTask.getTaskType() == DATA_TASK_TYPE_UPLOAD ) {
-		    	logger.debug(String.format("%10s %10s %5s %10s", edgeId, "upload", "to", "gateway"));
+	    	try {
+				if ( dataTask.getTaskType() == DATA_TASK_TYPE_UPLOAD ) {
+			    	logger.debug(String.format("%10s %10s %5s %10s", edgeId, "upload", "to", "gateway"));
 
-		    	// 디바이스에서 직접 올라온 데이터를 보고
-				DataInfoAndHistory dataInfoAndHistory = new DataInfoAndHistory(dataTask, edgeId);
-		    	HttpUtil.post(gate+"/api/gw/upload", dataInfoAndHistory.toJson());
-			} else if ( dataTask.getTaskType() == DATA_TASK_TYPE_COPY ) {
-				logger.debug(String.format("%10s %10s %5s %10s", edgeId, "copy", "to", "gateway"));
+			    	// 디바이스에서 직접 올라온 데이터를 보고
+					DataInfoAndHistory dataInfoAndHistory = new DataInfoAndHistory(dataTask, edgeId);
+			    	HttpUtil.post(gate+"/api/gw/upload", dataInfoAndHistory.toJson());
 
-				// 이웃 엣지 노드에서 복제받은 데이터를 보고
-				DataHistory dataHistory = new DataHistory(dataTask, edgeId);
-	        	HttpUtil.post(gate+"/api/gw/history", dataHistory.toJson());
-			} else if ( dataTask.getTaskType() == DATA_TASK_TYPE_DOWNLOAD ) {
-				logger.debug(String.format("%10s %10s %5s %10s", edgeId, "use", "to", "gateway"));
+			    	amoWalletService.registerTx(dataTask.getDataId());
+				} else if ( dataTask.getTaskType() == DATA_TASK_TYPE_COPY ) {
+					logger.debug(String.format("%10s %10s %5s %10s", edgeId, "copy", "to", "gateway"));
 
-				// 단말기가 다운로드 받은 데이터를 보고
-				DataHistory dataHistory = new DataHistory(dataTask, edgeId);
-	        	HttpUtil.post(gate+"/api/gw/history", dataHistory.toJson());
-			} else if ( dataTask.getTaskType() == DATA_TASK_TYPE_DELETE ) {
-				logger.debug(String.format("%10s %10s %5s %10s", edgeId, "delete", "to", "gateway"));
+					// 이웃 엣지 노드에서 복제받은 데이터를 보고
+					DataHistory dataHistory = new DataHistory(dataTask, edgeId);
+		        	HttpUtil.post(gate+"/api/gw/history", dataHistory.toJson());
+				} else if ( dataTask.getTaskType() == DATA_TASK_TYPE_DOWNLOAD ) {
+					logger.debug(String.format("%10s %10s %5s %10s", edgeId, "use", "to", "gateway"));
 
-				// 데이터 삭제를 보고
-				DataHistory dataHistory = new DataHistory(dataTask, edgeId);
-	        	HttpUtil.post(gate+"/api/gw/history", dataHistory.toJson());
-			}
+					// 단말기가 다운로드 받은 데이터를 보고
+					DataHistory dataHistory = new DataHistory(dataTask, edgeId);
+		        	HttpUtil.post(gate+"/api/gw/history", dataHistory.toJson());
+				} else if ( dataTask.getTaskType() == DATA_TASK_TYPE_DELETE ) {
+					logger.debug(String.format("%10s %10s %5s %10s", edgeId, "delete", "to", "gateway"));
+
+					// 데이터 삭제를 보고
+					DataHistory dataHistory = new DataHistory(dataTask, edgeId);
+		        	HttpUtil.post(gate+"/api/gw/history", dataHistory.toJson());
+				}
+	    	} catch (Exception e) {
+	    		e.printStackTrace();
+	    	}
 		}
 		dataTask.setHistoryStatus(1);
 	}
