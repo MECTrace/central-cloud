@@ -9,10 +9,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 @EqualsAndHashCode(callSuper=false)
-public class DataInfo extends BaseModel {
-	String dataId;
-    String dataFormat;
-    String deviceId;
-    long createTime;
-    String data;
+public class DataTrace extends BaseModel {
+	DataInfo dataInfo;
+    String fromType;
+    String fromId;
 }

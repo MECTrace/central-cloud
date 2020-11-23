@@ -25,6 +25,9 @@ import com.pentasecurity.edge.util.KeyStoreUtil;
 public class AmoWalletService {
 	Logger logger = LoggerFactory.getLogger("mainLogger");
 
+    @Value("${edge.amo-wallet}")
+    private int amoWallet;
+
     private String keyStore = "./edgenode.jceks";
     private char[] keyStorePW = "edgenode".toCharArray();
 
@@ -39,31 +42,33 @@ public class AmoWalletService {
     private String edgeId;
 
     public void registerTx(String dataId) throws GeneralSecurityException, IOException {
-        File file = new File(keyStore);
+    	if ( amoWallet != 0 ) {
+            File file = new File(keyStore);
 
-        if (false == file.exists()) {
-        	logger.debug(String.format("%10s %10s %5s %10s", edgeId, "keystore", "none", ""));
-            return;
-        }
+            if (false == file.exists()) {
+            	logger.debug(String.format("%10s %10s %5s %10s", edgeId, "keystore", "none", ""));
+                return;
+            }
 
-        byte[] parcelID = JniWrapper.GenHashMessage("SHA256", dataId.getBytes());
+            byte[] parcelID = JniWrapper.GenHashMessage("SHA256", dataId.getBytes());
 
 
 
-        String hexParcelID = PcwfUtils.byteArrayToHexString(ConvertUtils.intToByteArray(storageId)) + PcwfUtils.byteArrayToHexString(parcelID);
+            String hexParcelID = PcwfUtils.byteArrayToHexString(ConvertUtils.intToByteArray(storageId)) + PcwfUtils.byteArrayToHexString(parcelID);
 
-        logger.debug(String.format("%10s %10s %5s %10s", edgeId, "amo", "id", hexParcelID));
+            logger.debug(String.format("%10s %10s %5s %10s", edgeId, "amo", "id", hexParcelID));
 
-        KeyStore keyStore = KeyStoreUtil.loadKeyStore(file, keyStorePW);
-        AmoApiClient amoApiClient = getApiClient();
-        AMOWallet amoWallet = new AMOWallet(amoApiClient);
+            KeyStore keyStore = KeyStoreUtil.loadKeyStore(file, keyStorePW);
+            AmoApiClient amoApiClient = getApiClient();
+            AMOWallet amoWallet = new AMOWallet(amoApiClient);
 
-        amoWallet.setKeyStore(keyStore);
+            amoWallet.setKeyStore(keyStore);
 
-        AMOWallet.Wallet wallet = amoWallet.getWallet(1L);
-        //HDKeyPair hdKeyPair, WalletAccount account, BigInteger fee, byte[] custody, String target
-        String tx = amoWallet.register(wallet.hdKeyPair, wallet.account, BigInteger.valueOf(0), dataId.getBytes(), hexParcelID);
-        logger.debug(String.format("%10s %10s %5s %10s", edgeId, "amo", "tx", tx));
+            AMOWallet.Wallet wallet = amoWallet.getWallet(1L);
+            //HDKeyPair hdKeyPair, WalletAccount account, BigInteger fee, byte[] custody, String target
+            String tx = amoWallet.register(wallet.hdKeyPair, wallet.account, BigInteger.valueOf(0), dataId.getBytes(), hexParcelID);
+            logger.debug(String.format("%10s %10s %5s %10s", edgeId, "amo", "tx", tx));
+    	}
     }
 
     private AmoApiClient getApiClient() {

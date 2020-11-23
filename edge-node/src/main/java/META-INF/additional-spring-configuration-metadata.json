@@ -33,5 +33,15 @@
     "name": "edge.expire-delay-time",
     "type": "java.lang.Integer",
     "description": "데이터 사용을 위해 데이터 복제 완료 여부와 관계없이 데이터 유지 시간이 지난 후 dataTask에서 데이터를 삭제한다(초)"
+  },
+  {
+    "name": "edge.amo-wallet",
+    "type": "java.lang.Integer",
+    "description": "AMO Blockchan에 데이터 기록 유무"
+  },
+  {
+    "name": "edge.max-copy-node",
+    "type": "java.lang.Integer",
+    "description": "upload/copy된 데이터를 몇개의 이웃 노드에 전파할것인가?"
   }
 ]}

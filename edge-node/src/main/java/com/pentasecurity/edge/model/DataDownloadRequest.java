@@ -9,10 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 @EqualsAndHashCode(callSuper=false)
-public class DataInfo extends BaseModel {
-	String dataId;
-    String dataFormat;
-    String deviceId;
-    long createTime;
-    String data;
+public class DataDownloadRequest extends BaseModel {
+    String fromType;
+    String fromId;
 }
