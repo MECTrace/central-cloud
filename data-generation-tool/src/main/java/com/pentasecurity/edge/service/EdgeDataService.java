@@ -5,6 +5,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.PostConstruct;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -23,6 +25,8 @@ public class EdgeDataService
 	static final public int DATA_TASK_TYPE_COPY = 2;
 	static final public int DATA_TASK_TYPE_DOWNLOAD = 3;
 	static final public int DATA_TASK_TYPE_DELETE = 4;
+
+    Logger logger = LoggerFactory.getLogger("mainLogger");
 
     @Value("${edge.device-id}")
     private String deviceId;
@@ -45,7 +49,7 @@ public class EdgeDataService
     public void registerUploadTask(int maxSendCount, int delay, int minSize, int maxSize, boolean isOnTrace) {
     	DataTask dataTask = new DataTask(DATA_TASK_TYPE_UPLOAD, maxSendCount, delay, minSize, maxSize, isOnTrace);
 
-    	EdgeLogUtil.log(deviceId, "task0 start : "+dataTask.getTaskId(), dataTask.isOnTrace());
+    	EdgeLogUtil.log(deviceId, "task1 start : "+dataTask.getTaskId(), dataTask.isOnTrace());
 
     	taskStorage.put(dataTask.getTaskId(), dataTask);
     };
@@ -53,7 +57,7 @@ public class EdgeDataService
     public void registerDownloadTask(int maxSendCount, int delay, boolean isOnTrace) {
     	DataTask dataTask = new DataTask(DATA_TASK_TYPE_DOWNLOAD, maxSendCount, delay, 0, 0, isOnTrace);
 
-    	EdgeLogUtil.log(deviceId, "task1 start : "+dataTask.getTaskId(), dataTask.isOnTrace());
+    	EdgeLogUtil.log(deviceId, "task3 start : "+dataTask.getTaskId(), dataTask.isOnTrace());
 
     	taskStorage.put(dataTask.getTaskId(), dataTask);
     };
