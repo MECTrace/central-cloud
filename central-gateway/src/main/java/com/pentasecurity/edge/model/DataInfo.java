@@ -7,14 +7,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 @EqualsAndHashCode(callSuper=false)
-public class DataInfoAndHistory extends BaseModel {
+public class DataInfo extends BaseModel {
 	String dataId;
     String dataFormat;
     String deviceId;
-    String fromType;
-    String fromId;
-    String toType;
-    String toId;
     long createTime;
     String data;
 }

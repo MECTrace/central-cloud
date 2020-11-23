@@ -6,7 +6,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import com.pentasecurity.edge.model.BaseModel;
-import com.pentasecurity.edge.model.DataInfoAndHistory;
+import com.pentasecurity.edge.model.DataInfo;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
 @Data
 @EqualsAndHashCode(callSuper=false)
 public class Master extends BaseModel {
-	public Master(DataInfoAndHistory dataInfo) {
+	public Master(DataInfo dataInfo) {
 		this.dataId = dataInfo.getDataId();
 		this.sourceId = dataInfo.getDeviceId();
 		this.createTime = new Date(dataInfo.getCreateTime());
