@@ -14,5 +14,5 @@ import lombok.NoArgsConstructor;
 @Data
 @EqualsAndHashCode(callSuper=false)
 public class DataUseApiResponse extends ApiResponse {
-    ArrayList<DataInfo> list;
+    ArrayList<DataInfo> data;
 }

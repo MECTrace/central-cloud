@@ -20,6 +20,10 @@ public class DataInfo extends BaseModel {
 		this.data = data;
 	}
 
+	public DataInfo(String deviceId) {
+		this.deviceId = deviceId;
+	}
+
     String dataId;
     String dataFormat;
     String deviceId;

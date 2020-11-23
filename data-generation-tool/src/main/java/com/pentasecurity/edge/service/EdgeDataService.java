@@ -9,10 +9,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.pentasecurity.edge.model.DataDownloadRequest;
 import com.pentasecurity.edge.model.DataInfo;
 import com.pentasecurity.edge.model.DataTask;
-import com.pentasecurity.edge.model.DataUploadRequest;
 import com.pentasecurity.edge.model.response.DataUseApiResponse;
 import com.pentasecurity.edge.util.DataUtil;
 import com.pentasecurity.edge.util.EdgeLogUtil;
@@ -47,11 +45,15 @@ public class EdgeDataService
     public void registerUploadTask(int maxSendCount, int delay, int minSize, int maxSize, boolean isOnTrace) {
     	DataTask dataTask = new DataTask(DATA_TASK_TYPE_UPLOAD, maxSendCount, delay, minSize, maxSize, isOnTrace);
 
+    	EdgeLogUtil.log(deviceId, "task0 start : "+dataTask.getTaskId(), dataTask.isOnTrace());
+
     	taskStorage.put(dataTask.getTaskId(), dataTask);
     };
 
     public void registerDownloadTask(int maxSendCount, int delay, boolean isOnTrace) {
     	DataTask dataTask = new DataTask(DATA_TASK_TYPE_DOWNLOAD, maxSendCount, delay, 0, 0, isOnTrace);
+
+    	EdgeLogUtil.log(deviceId, "task1 start : "+dataTask.getTaskId(), dataTask.isOnTrace());
 
     	taskStorage.put(dataTask.getTaskId(), dataTask);
     };
@@ -84,17 +86,12 @@ public class EdgeDataService
 			int nodeNo = (int)Math.floor(Math.random()*nodes.length);
     		String node = nodes[nodeNo];
 
-    		if ( dataTask.isOnTrace() ) {
-    			DataUploadRequest request = new DataUploadRequest(deviceId, data);
-    			HttpUtil.post(node+"/api/edge/upload/traceOn", request.toJson());
+    		DataInfo dataTrace = new DataInfo(deviceId, data);
+			String url = node + "/api/edge/upload" + (dataTask.isOnTrace() ? "/traceOn" : "/traceOff");
 
-    			EdgeLogUtil.log(deviceId, "call", deviceId, node, request.toJson(), dataTask.isOnTrace());
-    		} else {
-    			DataInfo dataInfo = new DataInfo(deviceId, data);
-    			HttpUtil.post(node+"/api/edge/upload/traceOff", dataInfo.toJson());
+			EdgeLogUtil.log(deviceId, "call", deviceId, url, dataTrace.toJson(), dataTask.isOnTrace());
 
-    			EdgeLogUtil.log(deviceId, "call", deviceId, node, dataInfo.toJson(), dataTask.isOnTrace());
-    		}
+			HttpUtil.post(url, dataTrace.toJson());
 
 			dataTask.increaseSendCount();
 		}
@@ -106,25 +103,18 @@ public class EdgeDataService
     		String node = nodes[nodeNo];
     		String responseBody = null;
 
-    		if ( dataTask.isOnTrace() ) {
-    			DataDownloadRequest request = new DataDownloadRequest("device", deviceId);
-    			String url = node+"/api/edge/download/traceOn";
-    			responseBody = HttpUtil.post(url, request.toJson());
+    		DataInfo dataInfo = new DataInfo(deviceId);
+			String url = node + "/api/edge/download" + (dataTask.isOnTrace() ? "/traceOn" : "/traceOff");
 
-    			EdgeLogUtil.log(deviceId, "call", deviceId, url, request.toJson(), dataTask.isOnTrace());
-    		} else {
-    			DataDownloadRequest request = new DataDownloadRequest(null, deviceId);
-    			String url = node+"/api/edge/download/traceOff";
-    			responseBody = HttpUtil.post(url, request.toJson());
+			EdgeLogUtil.log(deviceId, "call", deviceId, url, dataTask.toJson(), dataTask.isOnTrace());
 
-    			EdgeLogUtil.log(deviceId, "call", deviceId, url, request.toJson(), dataTask.isOnTrace());
-    		}
+			responseBody = HttpUtil.post(url, dataInfo.toJson());
 
     		DataUseApiResponse response = DataUseApiResponse.fromJson(responseBody, DataUseApiResponse.class);
 
 			dataTask.increaseSendCount();
 
-			EdgeLogUtil.log(deviceId, "data download done - "+response.getList().size(), dataTask.isOnTrace());
+			EdgeLogUtil.log(deviceId, "data download done - "+response.getData().size(), dataTask.isOnTrace());
 		}
 	}
 
@@ -132,7 +122,7 @@ public class EdgeDataService
 		if ( dataTask.isDone() ) {
 			taskStorage.remove(dataTask.getTaskId());
 
-			EdgeLogUtil.log(deviceId, "task is done : "+dataTask.getTaskId(), dataTask.isOnTrace());
+			EdgeLogUtil.log(deviceId, "task"+dataTask.getTaskType()+" done : "+dataTask.getTaskId(), dataTask.isOnTrace());
 		}
 	}
 }

@@ -12,17 +12,21 @@ public class EdgeLogUtil {
 		try {
 			DateFormat format = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss");
 			String date = format.format(Calendar.getInstance().getTime());
-			String message = date+" "+String.format("%10s %10s %30s %s", objId, from, to, data);
+			String message = date+" "+String.format("%-10s %-10s %-30s", objId, from, to);
 			String mid2 = isOnTrace ? "traceOn" : "traceOff";
 
-			log("./logs/"+objId+"."+mid1+"."+mid2+".all", message);
-			log("./logs/"+objId+"."+mid1+"."+mid2+".raw", data);
-			log("./logs/"+objId+".all."+mid2+".all", message);
-			log("./logs/"+objId+".all."+mid2+".raw", data);
-			log("./logs/all."+mid1+"."+mid2+".all", message);
-			log("./logs/all."+mid1+"."+mid2+".raw", data);
-			log("./logs/all.all."+mid2+".all", message);
-			log("./logs/all.all."+mid2+".raw", data);
+			log("./logs/"+objId+"."+mid1+"."+mid2+".all.log", message+" "+data);
+			log("./logs/"+objId+"."+mid1+"."+mid2+".msg.log", message);
+			log("./logs/"+objId+"."+mid1+"."+mid2+".raw.log", data);
+			log("./logs/"+objId+".all."+mid2+".all.log", message+" "+data);
+			log("./logs/"+objId+".all."+mid2+".msg.log", message);
+			log("./logs/"+objId+".all."+mid2+".raw.log", data);
+			log("./logs/all."+mid1+"."+mid2+".all.log", message+" "+data);
+			log("./logs/all."+mid1+"."+mid2+".msg.log", message);
+			log("./logs/all."+mid1+"."+mid2+".raw.log", data);
+			log("./logs/all.all."+mid2+".all.log", message+" "+data);
+			log("./logs/all.all."+mid2+".msg.log", message);
+			log("./logs/all.all."+mid2+".raw.log", data);
 		} catch (Exception e) {
     		e.printStackTrace();
     	}
@@ -32,13 +36,13 @@ public class EdgeLogUtil {
 		try {
 			DateFormat format = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss");
 			String date = format.format(Calendar.getInstance().getTime());
-			String message = date+" "+String.format("%10s %s", objId, msg);
+			String message = date+" "+String.format("%-10s %s", objId, msg);
 			String mid2 = isOnTrace ? "traceOn" : "traceOff";
 
-			log("./logs/"+objId+".msg.all", message);
-			log("./logs/"+objId+".all."+mid2+".all", message);
-			log("./logs/all.msg."+mid2+".all", message);
-			log("./logs/all.all."+mid2+".all", message);
+			log("./logs/"+objId+".all."+mid2+".all.log", message);
+			log("./logs/"+objId+".all."+mid2+".msg.log", message);
+			log("./logs/all.all."+mid2+".all.log", message);
+			log("./logs/all.all."+mid2+".msg.log", message);
 		} catch (Exception e) {
     		e.printStackTrace();
     	}
@@ -47,7 +51,7 @@ public class EdgeLogUtil {
 	static private void log(String filename, String message) {
 		try {
 			File file = new File(filename);
-			FileUtils.writeByteArrayToFile(file, message.getBytes(), true);
+			FileUtils.writeByteArrayToFile(file, (message+"\n").getBytes(), true);
 		} catch (Exception e) {
     		e.printStackTrace();
     	}

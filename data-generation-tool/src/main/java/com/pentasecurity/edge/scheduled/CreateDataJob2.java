@@ -27,7 +27,7 @@ public class CreateDataJob2 {
      * 1시간마다 실행
      * 초 분 시 일 월 요일
      */
-    @Scheduled(cron="0 30 * * * *")
+    @Scheduled(cron="0 0 * * * *")
     public void job()
     {
     	edgeDataService.registerUploadTask(10, 10, 100, 200, true);
