@@ -86,14 +86,14 @@ public class EdgeNodeService {
 
 	public void registerTaskUpload(DataInfo dataInfo, boolean isOnTrace) {
 		// 이미 데이터를 받은 경우
-		if ( !write(dataInfo.getDataId(), dataInfo.getData()) ) {
+		if ( !write(dataInfo) ) {
 			return;
 		}
 
 		try {
 			DataTask dataTask = new DataTask(dataInfo, DATA_TASK_TYPE_UPLOAD, isOnTrace);
 
-			EdgeLogUtil.log(edgeId, "task0 start : "+dataTask.getTaskId(), dataTask.isOnTrace());
+			EdgeLogUtil.log(edgeId, "task1 start : "+dataTask.getTaskId(), dataTask.isOnTrace());
 
 			taskStorage.put(dataTask.getTaskId(), dataTask);
 		} catch (Exception e) {
@@ -104,14 +104,14 @@ public class EdgeNodeService {
 	public void registerTaskCopy(DataTrace dataTrace, boolean isOnTrace) {
 		// 이미 데이터를 받은 경우
 		DataInfo dataInfo = dataTrace.getDataInfo();
-		if ( !write(dataInfo.getDataId(), dataInfo.getData()) ) {
+		if ( !write(dataInfo) ) {
 			return;
 		}
 
 		try {
 			DataTask dataTask = new DataTask(dataTrace, DATA_TASK_TYPE_COPY, isOnTrace);
 
-			EdgeLogUtil.log(edgeId, "task1 start : "+dataTask.getTaskId(), dataTask.isOnTrace());
+			EdgeLogUtil.log(edgeId, "task2 start : "+dataTask.getTaskId(), dataTask.isOnTrace());
 
 			taskStorage.put(dataTask.getTaskId(), dataTask);
 		} catch (Exception e) {
@@ -121,7 +121,7 @@ public class EdgeNodeService {
 
 	public void registerTaskCopy(DataInfo dataInfo, boolean isOnTrace) {
 		// 이미 데이터를 받은 경우
-		if ( !write(dataInfo.getDataId(), dataInfo.getData()) ) {
+		if ( !write(dataInfo) ) {
 			return;
 		}
 
@@ -136,9 +136,14 @@ public class EdgeNodeService {
 		}
 	}
 
-	public void registerTaskDownload(DataInfo dataInfo, boolean isOnTrace) {
+	public void registerTaskDownload(String fromId, DataInfo dataInfo, boolean isOnTrace) {
 		try {
 			DataTask dataTask = new DataTask(dataInfo, DATA_TASK_TYPE_DOWNLOAD, isOnTrace);
+			dataTask.setFromType("device");
+			dataTask.setFromId(fromId);
+
+			EdgeLogUtil.log(edgeId, "task3 start : "+dataTask.getTaskId(), dataTask.isOnTrace());
+
 			taskStorage.put(dataTask.getTaskId(), dataTask);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -158,12 +163,12 @@ public class EdgeNodeService {
 			for(String dataId : dataIdSet) {
 				DataTask dataTask = taskStorage.get(dataId);
 
-				if ( dataTask != null && !dataTask.isUsed(dataInfo.getDeviceId()) ) {
+				if ( dataTask != null && dataTask.checkDownload(dataInfo.getDeviceId(), isOnTrace) ) {
 					data.add(dataTask.getDataInfo());
 					dataTask.use(dataInfo.getDeviceId());
-				}
 
-				registerTaskDownload(dataInfo, isOnTrace);
+					registerTaskDownload(dataInfo.getDeviceId(), dataTask.getDataInfo(), isOnTrace);
+				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -199,23 +204,22 @@ public class EdgeNodeService {
 	 * @param dataTask
 	 */
 	private void uploadToCentralGateway(DataTask dataTask) {
-		try {
-			if ( dataTask.checkUploadStatus() ) {
-				String gate = gates[(int)Math.floor(Math.random()*gates.length)];
-				String url = gate+"/api/gw/upload" + (dataTask.isOnTrace() ? "/traceOn" : "/traceOff");
+		if ( dataTask.checkUploadStatus() ) {
+			String gate = gates[(int)Math.floor(Math.random()*gates.length)];
+			String url = gate+"/api/gw/upload" + (dataTask.isOnTrace() ? "/traceOn" : "/traceOff");
 
-				EdgeLogUtil.log(edgeId, "call", edgeId, url, dataTask.getDataInfo().toJson(), dataTask.isOnTrace());
+			EdgeLogUtil.log(edgeId, "call", edgeId, url, dataTask.getDataInfo().toJson(), dataTask.isOnTrace());
 
-		    	// 디바이스에서 직접 올라온 데이터를 보고
-		    	HttpUtil.post(url, dataTask.getDataInfo().toJson());
+	    	// 디바이스에서 직접 올라온 데이터를 보고
+	    	HttpUtil.post(url, dataTask.getDataInfo().toJson());
 
-		    	dataTask.setUploadStatusDone();
-
+			try {
 		    	amoWalletService.registerTx(dataTask.getDataInfo().getDataId());
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
+		dataTask.setUploadStatusDone();
 	}
 
 	/**
@@ -285,12 +289,12 @@ public class EdgeNodeService {
 	 * @param data
 	 * @return
 	 */
-	private boolean write(String dataId, String data) {
+	private boolean write(DataInfo dataInfo) {
 		try {
-			File file = new File(STORAGE_PATH+"/"+dataId+".data");
+			File file = new File(STORAGE_PATH+"/"+dataInfo.getDataId()+".data");
 			if ( !file.exists() ) {
 				FileUtils.forceMkdirParent(file);
-				FileUtils.writeStringToFile(file, data, "UTF-8");
+				FileUtils.writeStringToFile(file, dataInfo.toJson(), "UTF-8");
 				return true;
 			}
 		} catch (Exception e) {

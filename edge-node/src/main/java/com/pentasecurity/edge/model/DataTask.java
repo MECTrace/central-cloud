@@ -28,7 +28,7 @@ public class DataTask extends BaseModel {
 		this.isOnTrace = isOnTrace;
 		this.usedDeviceIdList = new ArrayList<String>();
 
-		if ( taskType == EdgeNodeService.DATA_TASK_TYPE_UPLOAD || taskType == EdgeNodeService.DATA_TASK_TYPE_DOWNLOAD ) {
+		if ( taskType == EdgeNodeService.DATA_TASK_TYPE_UPLOAD ) {
 			this.fromType = "device";
 			this.fromId = dataInfo.getDeviceId();
 		}
@@ -59,7 +59,7 @@ public class DataTask extends BaseModel {
 	ArrayList<String> usedDeviceIdList;
 
 	public boolean checkUploadStatus() {
-		return uploadStatus == 0;
+		return taskType == EdgeNodeService.DATA_TASK_TYPE_UPLOAD && uploadStatus == 0;
 	}
 
 	public void setUploadStatusDone() {
@@ -117,13 +117,17 @@ public class DataTask extends BaseModel {
 		historyStatus = 1;
 	}
 
-	public boolean isUsed(String deviceId) {
-		if ( deviceId.equals(dataInfo.getDeviceId()) ) {
-			return false;
-		} else if ( usedDeviceIdList.indexOf(deviceId) > -1 ) {
+	public boolean checkDownload(String deviceId, boolean isOnTrace) {
+		if ( this.isOnTrace == isOnTrace ) {
+			if ( deviceId.equals(dataInfo.getDeviceId()) ) {
+				return false;
+			} else if ( usedDeviceIdList.indexOf(deviceId) > -1 ) {
+				return false;
+			}
+			return true;
+		} else {
 			return false;
 		}
-		return true;
 	}
 
 	public void use(String deviceId) {
