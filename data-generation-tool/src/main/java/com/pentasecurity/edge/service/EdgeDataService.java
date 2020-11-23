@@ -102,7 +102,7 @@ public class EdgeDataService
 	}
 
 	private void downloadFromEdge(DataTask dataTask) {
-		if ( dataTask.checkUpload() ) {
+		if ( dataTask.checkDownload() ) {
 			int nodeNo = (int)Math.floor(Math.random()*nodes.length);
     		String node = nodes[nodeNo];
     		String responseBody = null;
