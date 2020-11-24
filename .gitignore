@@ -8,6 +8,7 @@
 */gradle
 
 temp
+test_data
 
 */src/main/resources/*.dev.properties
 */*.log

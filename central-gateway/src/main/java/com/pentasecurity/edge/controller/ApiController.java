@@ -51,7 +51,7 @@ public class ApiController {
     		File file = new File(storagePath+"/"+dataInfo.getDataId()+".data");
 
 			FileUtils.forceMkdirParent(file);
-			FileUtils.writeStringToFile(file, dataInfo.getData(), "UTF-8");
+			FileUtils.writeStringToFile(file, dataInfo.toJson(), "UTF-8");
 
         	apiResponse.setCode(0);
         	apiResponse.setMessage("OK");
@@ -76,7 +76,7 @@ public class ApiController {
     		File file = new File(storagePath+"/"+dataInfo.getDataId()+".data");
 
 			FileUtils.forceMkdirParent(file);
-			FileUtils.writeStringToFile(file, dataInfo.getData(), "UTF-8");
+			FileUtils.writeStringToFile(file, dataInfo.toJson(), "UTF-8");
 
         	apiResponse.setCode(0);
         	apiResponse.setMessage("OK");
