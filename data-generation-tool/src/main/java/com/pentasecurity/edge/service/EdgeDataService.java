@@ -48,17 +48,11 @@ public class EdgeDataService
 
     public void registerUploadTask(int maxSendCount, int delay, int minSize, int maxSize, boolean isOnTrace) {
     	DataTask dataTask = new DataTask(DATA_TASK_TYPE_UPLOAD, maxSendCount, delay, minSize, maxSize, isOnTrace);
-
-    	EdgeLogUtil.log(deviceId, "task1 start : "+dataTask.getTaskId(), dataTask.isOnTrace());
-
     	taskStorage.put(dataTask.getTaskId(), dataTask);
     };
 
     public void registerDownloadTask(int maxSendCount, int delay, boolean isOnTrace) {
     	DataTask dataTask = new DataTask(DATA_TASK_TYPE_DOWNLOAD, maxSendCount, delay, 0, 0, isOnTrace);
-
-    	EdgeLogUtil.log(deviceId, "task3 start : "+dataTask.getTaskId(), dataTask.isOnTrace());
-
     	taskStorage.put(dataTask.getTaskId(), dataTask);
     };
 
@@ -125,8 +119,6 @@ public class EdgeDataService
 	private void removeDataTask(DataTask dataTask) {
 		if ( dataTask.isDone() ) {
 			taskStorage.remove(dataTask.getTaskId());
-
-			EdgeLogUtil.log(deviceId, "task"+dataTask.getTaskType()+" done : "+dataTask.getTaskId(), dataTask.isOnTrace());
 		}
 	}
 }

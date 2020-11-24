@@ -16,10 +16,10 @@ public class ScheduledJob {
     EdgeDataService edgeDataService;
 
     /**
-     * 10초마다 실행
+     * 매초마다 실행
      * 초 분 시 일 월 요일
      */
-    @Scheduled(cron="*/2 * * * * *")
+    @Scheduled(cron="* * * * * *")
     public void job()
     {
     	edgeDataService.processTask();
