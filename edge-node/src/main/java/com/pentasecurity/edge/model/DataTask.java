@@ -26,7 +26,6 @@ public class DataTask extends BaseModel {
 		this.copyCount = 0;
 		this.historyStatus = 0;
 		this.isOnTrace = isOnTrace;
-		this.usedDeviceIdList = new ArrayList<String>();
 
 		if ( taskType == EdgeNodeService.DATA_TASK_TYPE_UPLOAD ) {
 			this.fromType = "device";
@@ -56,7 +55,6 @@ public class DataTask extends BaseModel {
 	int historyStatus;
 	boolean isOnTrace;
 	ArrayList<String> copyNodeList;
-	ArrayList<String> usedDeviceIdList;
 
 	public boolean checkUploadStatus() {
 		return taskType == EdgeNodeService.DATA_TASK_TYPE_UPLOAD && uploadStatus == 0;
@@ -117,23 +115,6 @@ public class DataTask extends BaseModel {
 		historyStatus = 1;
 	}
 
-	public boolean checkDownload(String deviceId, boolean isOnTrace) {
-		if ( this.isOnTrace == isOnTrace ) {
-			if ( deviceId.equals(dataInfo.getDeviceId()) ) {
-				return false;
-			} else if ( usedDeviceIdList.indexOf(deviceId) > -1 ) {
-				return false;
-			}
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-	public void use(String deviceId) {
-		usedDeviceIdList.add(deviceId);
-	}
-
 	public boolean isDone() {
 		if ( taskType == EdgeNodeService.DATA_TASK_TYPE_UPLOAD && uploadStatus == 0 ) {
 			return false;
@@ -150,21 +131,5 @@ public class DataTask extends BaseModel {
 		}
 
 		return true;
-	}
-
-	public boolean isExpired() {
-		if ( taskType == EdgeNodeService.DATA_TASK_TYPE_DOWNLOAD ) {
-			return isDone();
-		} else if ( taskType == EdgeNodeService.DATA_TASK_TYPE_UPLOAD || taskType == EdgeNodeService.DATA_TASK_TYPE_COPY ) {
-			// 데이터 만료 시점은 노드가 데이터를 복제받은 시점이 아니라. 데이터가 생성된 시간을 기준으로 한다.
-			// (모든 노드에서 동시에 데이터가 무효화됨.)
-			long createTime = dataInfo.getCreateTime();
-			long now = System.currentTimeMillis();
-			long due = createTime + (EdgeNodeService.EXPIRE_DELAY_TIME * 1000);
-
-			return now > due;
-		} else {
-			return true;
-		}
 	}
 }

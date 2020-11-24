@@ -17,6 +17,7 @@ import org.springframework.util.StringUtils;
 
 import com.pentasecurity.edge.model.DataHistory;
 import com.pentasecurity.edge.model.DataInfo;
+import com.pentasecurity.edge.model.DataStorageItem;
 import com.pentasecurity.edge.model.DataTask;
 import com.pentasecurity.edge.model.DataTrace;
 import com.pentasecurity.edge.util.EdgeLogUtil;
@@ -61,6 +62,7 @@ public class EdgeNodeService {
     AmoWalletService amoWalletService;
 
     static ConcurrentHashMap<String, DataTask> taskStorage = new ConcurrentHashMap<String, DataTask>();
+    static ConcurrentHashMap<String, DataStorageItem> dataStorage = new ConcurrentHashMap<String, DataStorageItem>();
 
     @PostConstruct
     public void init() {
@@ -92,10 +94,9 @@ public class EdgeNodeService {
 
 		try {
 			DataTask dataTask = new DataTask(dataInfo, DATA_TASK_TYPE_UPLOAD, isOnTrace);
-
-			EdgeLogUtil.log(edgeId, "task1 start : "+dataTask.getTaskId(), dataTask.isOnTrace());
-
+			DataStorageItem dataItem = new DataStorageItem(dataInfo, isOnTrace);
 			taskStorage.put(dataTask.getTaskId(), dataTask);
+			dataStorage.put(dataInfo.getDataId(), dataItem);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -110,10 +111,9 @@ public class EdgeNodeService {
 
 		try {
 			DataTask dataTask = new DataTask(dataTrace, DATA_TASK_TYPE_COPY, isOnTrace);
-
-			EdgeLogUtil.log(edgeId, "task2 start : "+dataTask.getTaskId(), dataTask.isOnTrace());
-
+			DataStorageItem dataItem = new DataStorageItem(dataInfo, isOnTrace);
 			taskStorage.put(dataTask.getTaskId(), dataTask);
+			dataStorage.put(dataInfo.getDataId(), dataItem);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -127,10 +127,9 @@ public class EdgeNodeService {
 
 		try {
 			DataTask dataTask = new DataTask(dataInfo, DATA_TASK_TYPE_COPY, isOnTrace);
-
-			EdgeLogUtil.log(edgeId, "task2 start : "+dataTask.getTaskId(), dataTask.isOnTrace());
-
+			DataStorageItem dataItem = new DataStorageItem(dataInfo, isOnTrace);
 			taskStorage.put(dataTask.getTaskId(), dataTask);
+			dataStorage.put(dataInfo.getDataId(), dataItem);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -141,8 +140,6 @@ public class EdgeNodeService {
 			DataTask dataTask = new DataTask(dataInfo, DATA_TASK_TYPE_DOWNLOAD, isOnTrace);
 			dataTask.setFromType("device");
 			dataTask.setFromId(fromId);
-
-			EdgeLogUtil.log(edgeId, "task3 start : "+dataTask.getTaskId(), dataTask.isOnTrace());
 
 			taskStorage.put(dataTask.getTaskId(), dataTask);
 		} catch (Exception e) {
@@ -158,16 +155,16 @@ public class EdgeNodeService {
 		ArrayList<DataInfo> data = new ArrayList<DataInfo>();
 
 		try {
-			Set<String> dataIdSet = taskStorage.keySet();
+			Set<String> dataIdSet = dataStorage.keySet();
 
 			for(String dataId : dataIdSet) {
-				DataTask dataTask = taskStorage.get(dataId);
+				DataStorageItem dataItem = dataStorage.get(dataId);
 
-				if ( dataTask != null && dataTask.checkDownload(dataInfo.getDeviceId(), isOnTrace) ) {
-					data.add(dataTask.getDataInfo());
-					dataTask.use(dataInfo.getDeviceId());
+				if ( dataItem != null && dataItem.checkDownload(dataInfo.getDeviceId(), isOnTrace) ) {
+					data.add(dataItem.getDataInfo());
+					dataItem.use(dataInfo.getDeviceId());
 
-					registerTaskDownload(dataInfo.getDeviceId(), dataTask.getDataInfo(), isOnTrace);
+					registerTaskDownload(dataInfo.getDeviceId(), dataItem.getDataInfo(), isOnTrace);
 				}
 			}
 		} catch (Exception e) {
@@ -182,16 +179,26 @@ public class EdgeNodeService {
 	 */
 	public void processTask() {
 		try {
-			Set<String> dataIdSet = taskStorage.keySet();
+			Set<String> taskIdSet = taskStorage.keySet();
 
-			for(String dataId : dataIdSet) {
-				DataTask dataTask = taskStorage.get(dataId);
+			for(String taskId : taskIdSet) {
+				DataTask dataTask = taskStorage.get(taskId);
 
 				if ( dataTask != null ) {
 					uploadToCentralGateway(dataTask);
 					copyToEdgeNode(dataTask);
 					reportToCentralGateway(dataTask);
 					removeDataTask(dataTask);
+				}
+			}
+
+			Set<String> dataIdSet = dataStorage.keySet();
+
+			for(String dataId : dataIdSet) {
+				DataStorageItem dataItem = dataStorage.get(dataId);
+
+				if ( dataItem != null ) {
+					removeDataStorageItem(dataItem);
 				}
 			}
 		} catch (Exception e) {
@@ -274,11 +281,19 @@ public class EdgeNodeService {
 	 * @param dataTask
 	 */
 	private void removeDataTask(DataTask dataTask) {
-		// 데이터 사용을 위해 데이터 복제 완료 여부와 관계없이 데이터 유지 시간이 지난 후 dataTask에서 데이터를 삭제한다.
-		if ( dataTask.isExpired() ) {
+		if ( dataTask.isDone() ) {
 			taskStorage.remove(dataTask.getTaskId());
+		}
+	}
 
-			EdgeLogUtil.log(edgeId, "task"+dataTask.getTaskType()+" done : "+dataTask.getTaskId(), dataTask.isOnTrace());
+
+	/**
+	 * 시간이 만료된 데이터는 삭제한다.
+	 * @param dataItem
+	 */
+	private void removeDataStorageItem(DataStorageItem dataItem) {
+		if ( dataItem.isExpired() ) {
+			dataStorage.remove(dataItem.getDataInfo().getDataId());
 		}
 	}
 
