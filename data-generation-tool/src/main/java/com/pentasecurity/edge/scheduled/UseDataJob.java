@@ -24,12 +24,12 @@ public class UseDataJob {
     EdgeDataService edgeDataService;
 
     /**
-     * 1시간마다 실행
+     * 2시간마다 실행
      * 초 분 시 일 월 요일
      */
-    @Scheduled(cron="0 1 * * * *")
+    @Scheduled(cron="0 5 */2 * * *")
     public void job()
     {
-    	edgeDataService.registerDownloadTask(10, 60, true);
+    	edgeDataService.registerDownloadTask(50, 60, true);
     }
 }
