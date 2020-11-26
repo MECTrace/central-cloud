@@ -112,7 +112,7 @@ public class EdgeDataService
 
 			dataTask.increaseSendCount();
 
-			EdgeLogUtil.log(deviceId, "data download done - "+response.getData().size(), dataTask.isOnTrace());
+			EdgeLogUtil.log(deviceId, "download", deviceId, url, response.toJson(), dataTask.isOnTrace());
 		}
 	}
 
