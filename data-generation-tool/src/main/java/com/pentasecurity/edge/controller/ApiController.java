@@ -27,7 +27,7 @@ public class ApiController {
     	ApiResponse apiResponse = new ApiResponse(-99, "error");
 
     	try {
-    		edgeDataService.registerUploadTask(500, 3, 8500, 8500, true);
+    		edgeDataService.registerUploadTask(1, 3, 50, 100, true);
 
         	apiResponse.setCode(0);
         	apiResponse.setMessage("OK");
@@ -44,7 +44,7 @@ public class ApiController {
     	ApiResponse apiResponse = new ApiResponse(-99, "error");
 
     	try {
-    		edgeDataService.registerUploadTask(500, 3, 8500, 8500, false);
+    		edgeDataService.registerUploadTask(1, 3, 50, 100, false);
 
         	apiResponse.setCode(0);
         	apiResponse.setMessage("OK");
@@ -61,7 +61,7 @@ public class ApiController {
     	ApiResponse apiResponse = new ApiResponse(-99, "error");
 
     	try {
-    		edgeDataService.registerDownloadTask(30, 60, true);
+    		edgeDataService.registerDownloadTask(1, 60, true);
 
         	apiResponse.setCode(0);
         	apiResponse.setMessage("OK");
@@ -78,7 +78,7 @@ public class ApiController {
     	ApiResponse apiResponse = new ApiResponse(-99, "error");
 
     	try {
-    		edgeDataService.registerDownloadTask(30, 60, false);
+    		edgeDataService.registerDownloadTask(1, 60, false);
 
         	apiResponse.setCode(0);
         	apiResponse.setMessage("OK");

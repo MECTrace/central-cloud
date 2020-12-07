@@ -9,20 +9,20 @@ import org.springframework.stereotype.Component;
 
 import com.pentasecurity.edge.service.EdgeDataService;
 
-@Profile("AutoDataCreator1")
+@Profile("UseDataJob2")
 @Component
-public class CreateDataJob1 {
+public class UseDataJob2 {
     Logger logger = LoggerFactory.getLogger("mainLogger");
 
     @Autowired
     EdgeDataService edgeDataService;
 
     /**
-     * 시작과 동시에 실행
+     * 시작후 6분 10초 뒤에 실행
      */
-    @Scheduled(initialDelay = 1000, fixedDelay = 99999999)
+    @Scheduled(initialDelay = 370000, fixedDelay = 99999999)
     public void job()
     {
-    	edgeDataService.registerUploadTask(100, 3, 50, 100, true);
+    	edgeDataService.registerDownloadTask(5, 20, true);
     }
 }

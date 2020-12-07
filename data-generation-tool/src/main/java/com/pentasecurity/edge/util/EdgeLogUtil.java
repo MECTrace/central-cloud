@@ -6,13 +6,17 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class EdgeLogUtil {
-	static public void log(String objId, String mid1, String from, String to, String data, boolean isOnTrace) {
+	static Logger logger = LoggerFactory.getLogger("mainLogger");
+
+	static public void log(String objId, String mid1, String from, String to, String url, String data, boolean isOnTrace) {
 		try {
 			DateFormat format = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss");
 			String date = format.format(Calendar.getInstance().getTime());
-			String message = date+" "+String.format("%-10s %-10s %-30s", objId, from, to);
+			String message = date+" "+String.format("%-10s %-10s %-10s %-30s", objId, from, to, url);
 			String mid2 = isOnTrace ? "traceOn" : "traceOff";
 
 			log("./logs/"+objId+"."+mid1+"."+mid2+".all.log", message+" "+data);

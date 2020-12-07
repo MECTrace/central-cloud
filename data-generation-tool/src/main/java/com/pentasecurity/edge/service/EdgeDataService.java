@@ -1,5 +1,6 @@
 package com.pentasecurity.edge.service;
 
+import java.util.ArrayList;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -13,6 +14,7 @@ import org.springframework.util.StringUtils;
 
 import com.pentasecurity.edge.model.DataInfo;
 import com.pentasecurity.edge.model.DataTask;
+import com.pentasecurity.edge.model.ServerInfo;
 import com.pentasecurity.edge.model.response.DataUseApiResponse;
 import com.pentasecurity.edge.util.DataUtil;
 import com.pentasecurity.edge.util.EdgeLogUtil;
@@ -33,16 +35,23 @@ public class EdgeDataService
     @Value("${edge.node-list}")
     private String nodeList;
 
-    private String[] nodes = null;
+    static public ArrayList<ServerInfo> nodes = null;
 
     static ConcurrentHashMap<String, DataTask> taskStorage = new ConcurrentHashMap<String, DataTask>();
 
     @PostConstruct
     public void init() {
+    	nodes = new ArrayList<ServerInfo>();
+
     	if ( !StringUtils.isEmpty(nodeList) ) {
-        	nodes = nodeList.split(",");
-    	} else {
-    		nodes = new String[0];
+        	for(String node : nodeList.split(";")) {
+        		if ( !StringUtils.isEmpty(node) ) {
+        			String[] info = node.split(",");
+        			if ( info.length == 2 ) {
+        				nodes.add(new ServerInfo(info[0], info[1]));
+        			}
+        		}
+        	}
     	}
     }
 
@@ -80,16 +89,17 @@ public class EdgeDataService
 	private void uploadToEdge(DataTask dataTask) {
 		if ( dataTask.checkUpload() ) {
 			String data = DataUtil.make(dataTask.getRandomDataSize());
+    		ServerInfo node = nodes.get((int)Math.floor(Math.random()*nodes.size()));
 
-			int nodeNo = (int)Math.floor(Math.random()*nodes.length);
-    		String node = nodes[nodeNo];
+    		DataInfo dataInfo = new DataInfo(deviceId, data);
 
-    		DataInfo dataTrace = new DataInfo(deviceId, data);
-			String url = node + "/api/edge/upload" + (dataTask.isOnTrace() ? "/traceOn" : "/traceOff");
+    		logger.debug("create data : "+dataInfo.getDataId());
 
-			EdgeLogUtil.log(deviceId, "call", deviceId, url, dataTrace.toJson(), dataTask.isOnTrace());
+			String url = node.getServerUrl() + "/api/edge/upload" + (dataTask.isOnTrace() ? "/traceOn" : "/traceOff");
 
-			HttpUtil.post(url, dataTrace.toJson());
+			EdgeLogUtil.log(deviceId, "call", deviceId, node.getServerId(), url, dataInfo.toJson(), dataTask.isOnTrace());
+
+			HttpUtil.post(url, dataInfo.toJson());
 
 			dataTask.increaseSendCount();
 		}
@@ -97,14 +107,13 @@ public class EdgeDataService
 
 	private void downloadFromEdge(DataTask dataTask) {
 		if ( dataTask.checkDownload() ) {
-			int nodeNo = (int)Math.floor(Math.random()*nodes.length);
-    		String node = nodes[nodeNo];
+    		ServerInfo node = nodes.get((int)Math.floor(Math.random()*nodes.size()));
     		String responseBody = null;
 
     		DataInfo dataInfo = new DataInfo(deviceId);
-			String url = node + "/api/edge/download" + (dataTask.isOnTrace() ? "/traceOn" : "/traceOff");
+			String url = node.getServerUrl() + "/api/edge/download" + (dataTask.isOnTrace() ? "/traceOn" : "/traceOff");
 
-			EdgeLogUtil.log(deviceId, "call", deviceId, url, dataTask.toJson(), dataTask.isOnTrace());
+			EdgeLogUtil.log(deviceId, "call", deviceId, node.getServerId(), url, dataTask.toJson(), dataTask.isOnTrace());
 
 			responseBody = HttpUtil.post(url, dataInfo.toJson());
 
@@ -112,7 +121,7 @@ public class EdgeDataService
 
 			dataTask.increaseSendCount();
 
-			EdgeLogUtil.log(deviceId, "download", deviceId, url, response.toJson(), dataTask.isOnTrace());
+			EdgeLogUtil.log(deviceId, "download", deviceId, node.getServerId(), url, response.toJson(), dataTask.isOnTrace());
 		}
 	}
 
