@@ -7,12 +7,12 @@
   {
     "name": "edge.node-list",
     "type": "java.lang.String",
-    "description": "사용 가능한 edge node list"
+    "description": "사용 가능한 edge node list(형식:node1id,node1url;node2id,node2url,...)"
   },
   {
     "name": "edge.gate-list",
     "type": "java.lang.String",
-    "description": "사용 가능한 edge gate list"
+    "description": "사용 가능한 edge gate list(형식:gate1id,gate1url;gate2id,gate2url,...)"
   },
   {
     "name": "edge.storage-path",

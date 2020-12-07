@@ -20,6 +20,7 @@ import com.pentasecurity.edge.model.DataInfo;
 import com.pentasecurity.edge.model.DataStorageItem;
 import com.pentasecurity.edge.model.DataTask;
 import com.pentasecurity.edge.model.DataTrace;
+import com.pentasecurity.edge.model.ServerInfo;
 import com.pentasecurity.edge.util.EdgeLogUtil;
 import com.pentasecurity.edge.util.HttpUtil;
 
@@ -55,8 +56,8 @@ public class EdgeNodeService {
     static public int EXPIRE_DELAY_TIME;
     static public int MAX_COPY_NODE;
 
-    static public String[] nodes = null;
-    static public String[] gates = null;
+    static public ArrayList<ServerInfo> nodes = null;
+    static public ArrayList<ServerInfo> gates = null;
 
     @Autowired
     AmoWalletService amoWalletService;
@@ -66,16 +67,29 @@ public class EdgeNodeService {
 
     @PostConstruct
     public void init() {
+    	nodes = new ArrayList<ServerInfo>();
+    	gates = new ArrayList<ServerInfo>();
+
     	if ( !StringUtils.isEmpty(nodeList) ) {
-        	nodes = nodeList.split(",");
-    	} else {
-    		nodes = new String[0];
+        	for(String node : nodeList.split(";")) {
+        		if ( !StringUtils.isEmpty(node) ) {
+        			String[] info = node.split(",");
+        			if ( info.length == 2 ) {
+        				nodes.add(new ServerInfo(info[0], info[1]));
+        			}
+        		}
+        	}
     	}
 
     	if ( !StringUtils.isEmpty(gateList) ) {
-        	gates = gateList.split(",");
-    	} else {
-    		gates = new String[0];
+        	for(String gate : gateList.split(";")) {
+        		if ( !StringUtils.isEmpty(gate) ) {
+        			String[] info = gate.split(",");
+        			if ( info.length == 2 ) {
+        				gates.add(new ServerInfo(info[0], info[1]));
+        			}
+        		}
+        	}
     	}
 
     	EDGE_ID = edgeId;
@@ -212,13 +226,13 @@ public class EdgeNodeService {
 	 */
 	private void uploadToCentralGateway(DataTask dataTask) {
 		if ( dataTask.checkUploadStatus() ) {
-			String gate = gates[(int)Math.floor(Math.random()*gates.length)];
-			String url = gate+"/api/gw/upload" + (dataTask.isOnTrace() ? "/traceOn" : "/traceOff");
+			ServerInfo gate = gates.get((int)Math.floor(Math.random()*gates.size()));
+			String url = "/api/gw/upload" + (dataTask.isOnTrace() ? "/traceOn" : "/traceOff");
 
-			EdgeLogUtil.log(edgeId, "call", edgeId, url, dataTask.getDataInfo().toJson(), dataTask.isOnTrace());
+			EdgeLogUtil.log(edgeId, "call", edgeId, gate.getServerId(), url, dataTask.getDataInfo().toJson(), dataTask.isOnTrace());
 
 	    	// 디바이스에서 직접 올라온 데이터를 보고
-	    	HttpUtil.post(url, dataTask.getDataInfo().toJson());
+	    	HttpUtil.post(gate.getServerUrl() + url, dataTask.getDataInfo().toJson());
 
 			try {
 		    	amoWalletService.registerTx(dataTask.getDataInfo().getDataId());
@@ -237,19 +251,19 @@ public class EdgeNodeService {
 		if ( dataTask.checkCopyStatus() ) {
 			// device에서 업로드된 데이터는 바로 이웃 엣지로 전송
 			// 이웃 엣지에서 전달받은 데이터는 일정 확률로 이웃 엣지로 전송(for test)
-			String node = dataTask.getCopyNode();
-			String url = node+"/api/edge/copy" + (dataTask.isOnTrace() ? "/traceOn" : "/traceOff");
+			ServerInfo node = dataTask.getCopyNode();
+			String url = "/api/edge/copy" + (dataTask.isOnTrace() ? "/traceOn" : "/traceOff");
 
 			if ( dataTask.isOnTrace() ) {
 				DataTrace dataTrace = new DataTrace(dataTask.getDataInfo(), "edge", edgeId);
 
-				EdgeLogUtil.log(edgeId, "call", edgeId, url, dataTrace.toJson(), dataTask.isOnTrace());
+				EdgeLogUtil.log(edgeId, "call", edgeId, node.getServerId(), url, dataTrace.toJson(), dataTask.isOnTrace());
 
-				HttpUtil.post(url, dataTrace.toJson());
+				HttpUtil.post(node.getServerUrl() + url, dataTrace.toJson());
 			} else {
-				EdgeLogUtil.log(edgeId, "call", edgeId, url, dataTask.getDataInfo().toJson(), dataTask.isOnTrace());
+				EdgeLogUtil.log(edgeId, "call", edgeId, node.getServerId(), url, dataTask.getDataInfo().toJson(), dataTask.isOnTrace());
 
-				HttpUtil.post(url, dataTask.getDataInfo().toJson());
+				HttpUtil.post(node.getServerUrl() + url, dataTask.getDataInfo().toJson());
 			}
 			// copy 상태확인을 위해 status 값을 증가시킨다.
 			dataTask.increaseCopyStatus();
@@ -264,14 +278,14 @@ public class EdgeNodeService {
 		// central gateway에 보고되지 않은 data를 보고한다.
 		if ( dataTask.checkHistoryStatus() ) {
 			// 여러개의 게이트가 등록되어 있다면 임의로 1개를 선택한다.
-	    	String gate = gates[(int)Math.floor(Math.random()*gates.length)];
-	    	String url = gate+"/api/gw/history" + (dataTask.isOnTrace() ? "/traceOn" : "/traceOff");
+	    	ServerInfo gate = gates.get((int)Math.floor(Math.random()*gates.size()));
+	    	String url = "/api/gw/history" + (dataTask.isOnTrace() ? "/traceOn" : "/traceOff");
 
     		DataHistory dataHistory = dataTask.getDataHistory();
 
-	    	EdgeLogUtil.log(edgeId, "call", edgeId, url, dataHistory.toJson(), dataTask.isOnTrace());
+	    	EdgeLogUtil.log(edgeId, "call", edgeId, gate.getServerId(), url, dataHistory.toJson(), dataTask.isOnTrace());
 
-	    	HttpUtil.post(url, dataHistory.toJson());
+	    	HttpUtil.post(gate.getServerUrl() + url, dataHistory.toJson());
 		}
 		dataTask.setHistoryStatusDone();
 	}

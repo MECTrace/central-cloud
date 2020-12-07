@@ -35,7 +35,7 @@ public class ApiController {
     public ApiResponse uploadTraceOn(@RequestBody DataInfo dataInfo) {
     	ApiResponse apiResponse = new ApiResponse(-99, "error");
 
-    	EdgeLogUtil.log(edgeId, "in", dataInfo.getDeviceId(), "/api/edge/upload/traceOn", dataInfo.toJson(), true);
+    	EdgeLogUtil.log(edgeId, "in", dataInfo.getDeviceId(), edgeId, "/api/edge/upload/traceOn", dataInfo.toJson(), true);
 
     	try {
     		edgeNodeService.registerTaskUpload(dataInfo, true);
@@ -54,7 +54,7 @@ public class ApiController {
     public ApiResponse uploadTraceOff(@RequestBody DataInfo dataInfo) {
     	ApiResponse apiResponse = new ApiResponse(-99, "error");
 
-    	EdgeLogUtil.log(edgeId, "in", dataInfo.getDeviceId(), "/api/edge/upload/traceOff", dataInfo.toJson(), false);
+    	EdgeLogUtil.log(edgeId, "in", dataInfo.getDeviceId(), edgeId, "/api/edge/upload/traceOff", dataInfo.toJson(), false);
 
     	try {
     		edgeNodeService.registerTaskUpload(dataInfo, false);
@@ -73,7 +73,7 @@ public class ApiController {
     public ApiResponse copyTraceOn(@RequestBody DataTrace dataTrace) {
     	ApiResponse apiResponse = new ApiResponse(-99, "error");
 
-    	EdgeLogUtil.log(edgeId, "in", dataTrace.getFromId(), "/api/edge/copy/traceOn", dataTrace.toJson(), true);
+    	EdgeLogUtil.log(edgeId, "in", dataTrace.getFromId(), edgeId, "/api/edge/copy/traceOn", dataTrace.toJson(), true);
 
     	try {
     		edgeNodeService.registerTaskCopy(dataTrace, true);
@@ -92,7 +92,7 @@ public class ApiController {
     public ApiResponse copyTraceOff(@RequestBody DataInfo dataInfo) {
     	ApiResponse apiResponse = new ApiResponse(-99, "error");
 
-    	EdgeLogUtil.log(edgeId, "in", "", "/api/edge/copy/traceOff", dataInfo.toJson(), false);
+    	EdgeLogUtil.log(edgeId, "in", "", edgeId, "/api/edge/copy/traceOff", dataInfo.toJson(), false);
 
     	try {
     		edgeNodeService.registerTaskCopy(dataInfo, false);
@@ -111,7 +111,7 @@ public class ApiController {
     public DataUseApiResponse downloadTraceOn(@RequestBody DataInfo dataInfo) {
     	DataUseApiResponse apiResponse = new DataUseApiResponse(-99, "error");
 
-    	EdgeLogUtil.log(edgeId, "in", dataInfo.getDeviceId(), "/api/edge/download/traceOn", dataInfo.toJson(), true);
+    	EdgeLogUtil.log(edgeId, "in", dataInfo.getDeviceId(), edgeId, "/api/edge/download/traceOn", dataInfo.toJson(), true);
 
     	try {
     		ArrayList<DataInfo> data = edgeNodeService.download(dataInfo, true);
@@ -131,7 +131,7 @@ public class ApiController {
     public DataUseApiResponse downloadTraceOff(@RequestBody DataInfo dataInfo) {
     	DataUseApiResponse apiResponse = new DataUseApiResponse(-99, "error");
 
-    	EdgeLogUtil.log(edgeId, "in", dataInfo.getDeviceId(), "/api/edge/download/traceOff", dataInfo.toJson(), false);
+    	EdgeLogUtil.log(edgeId, "in", dataInfo.getDeviceId(), edgeId, "/api/edge/download/traceOff", dataInfo.toJson(), false);
 
     	try {
     		ArrayList<DataInfo> data = edgeNodeService.download(dataInfo, false);

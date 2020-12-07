@@ -1,7 +1,6 @@
 package com.pentasecurity.edge.model;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
 
@@ -33,7 +32,10 @@ public class DataTask extends BaseModel {
 		}
 
 		if ( taskType == EdgeNodeService.DATA_TASK_TYPE_UPLOAD || taskType == EdgeNodeService.DATA_TASK_TYPE_COPY ) {
-			copyNodeList = new ArrayList<String>(Arrays.asList(EdgeNodeService.nodes));
+			copyNodeList = new ArrayList<ServerInfo>();
+			for(ServerInfo node : EdgeNodeService.nodes) {
+				copyNodeList.add(node);
+			}
 			Collections.shuffle(copyNodeList);
 		}
 	}
@@ -54,7 +56,7 @@ public class DataTask extends BaseModel {
 	int copyCount;
 	int historyStatus;
 	boolean isOnTrace;
-	ArrayList<String> copyNodeList;
+	ArrayList<ServerInfo> copyNodeList;
 
 	public boolean checkUploadStatus() {
 		return taskType == EdgeNodeService.DATA_TASK_TYPE_UPLOAD && uploadStatus == 0;
@@ -66,7 +68,7 @@ public class DataTask extends BaseModel {
 
 	public boolean checkCopyStatus() {
 		if ( (taskType == EdgeNodeService.DATA_TASK_TYPE_UPLOAD || (taskType == EdgeNodeService.DATA_TASK_TYPE_COPY && (EdgeNodeService.COPY_2ND_RATE < Math.random()*100))) ) {
-			if ( copyCount < EdgeNodeService.nodes.length && copyCount < EdgeNodeService.MAX_COPY_NODE ) {
+			if ( copyCount < EdgeNodeService.nodes.size() && copyCount < EdgeNodeService.MAX_COPY_NODE ) {
 				long now = System.currentTimeMillis();
 				long due = timestamp + ((EdgeNodeService.COPY_DELAY_TIME * 1000) * (1+copyCount));
 
@@ -77,7 +79,7 @@ public class DataTask extends BaseModel {
 		return false;
 	}
 
-	public String getCopyNode() {
+	public ServerInfo getCopyNode() {
 		return copyNodeList.get(copyCount);
 	}
 
@@ -125,7 +127,7 @@ public class DataTask extends BaseModel {
 		}
 
 		if ( (taskType == EdgeNodeService.DATA_TASK_TYPE_UPLOAD || taskType == EdgeNodeService.DATA_TASK_TYPE_COPY) ) {
-			if ( copyCount < EdgeNodeService.nodes.length && copyCount < EdgeNodeService.MAX_COPY_NODE ) {
+			if ( copyCount < EdgeNodeService.nodes.size() && copyCount < EdgeNodeService.MAX_COPY_NODE ) {
 				return false;
 			}
 		}
