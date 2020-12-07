@@ -43,7 +43,7 @@ public class ApiController {
     	ApiResponse apiResponse = new ApiResponse(-99, "error");
 
     	try {
-    		EdgeLogUtil.log(gatewayId, "in", "", "/api/gw/upload/traceOn", dataInfo.toJson(), true);
+    		EdgeLogUtil.log(gatewayId, "in", "", gatewayId, "/api/gw/upload/traceOn", dataInfo.toJson(), true);
 
     		Master master = new Master(dataInfo);
     		masterRepository.save(master);
@@ -68,7 +68,7 @@ public class ApiController {
     	ApiResponse apiResponse = new ApiResponse(-99, "error");
 
     	try {
-    		EdgeLogUtil.log(gatewayId, "in", "", "/api/gw/upload/traceOff", dataInfo.toJson(), false);
+    		EdgeLogUtil.log(gatewayId, "in", "", gatewayId, "/api/gw/upload/traceOff", dataInfo.toJson(), false);
 
     		Master master = new Master(dataInfo);
     		masterRepository.save(master);
@@ -92,7 +92,7 @@ public class ApiController {
     public ApiResponse historyTraceOn(@RequestBody DataHistory dataHistory) {
     	ApiResponse apiResponse = new ApiResponse(-99, "error");
 
-    	EdgeLogUtil.log(gatewayId, "in", "", "/api/gw/history/traceOn", dataHistory.toJson(), true);
+    	EdgeLogUtil.log(gatewayId, "in", dataHistory.getToId(), gatewayId, "/api/gw/history/traceOn", dataHistory.toJson(), true);
 
     	try {
     		History history = new History(dataHistory);
@@ -112,7 +112,7 @@ public class ApiController {
     public ApiResponse history(@RequestBody DataHistory dataHistory) {
     	ApiResponse apiResponse = new ApiResponse(-99, "error");
 
-    	EdgeLogUtil.log(gatewayId, "in", "", "/api/gw/history/traceOff", dataHistory.toJson(), false);
+    	EdgeLogUtil.log(gatewayId, "in", "", gatewayId, "/api/gw/history/traceOff", dataHistory.toJson(), false);
 
     	try {
     		History history = new History(dataHistory);
