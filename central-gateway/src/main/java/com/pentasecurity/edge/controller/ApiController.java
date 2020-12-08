@@ -44,6 +44,7 @@ public class ApiController {
 
     	try {
     		EdgeLogUtil.log(gatewayId, "in", "", gatewayId, "/api/gw/upload/traceOn", dataInfo.toJson(), true);
+    		logger.debug(System.currentTimeMillis()+"|"+dataInfo.getDataId()+"|recv");
 
     		Master master = new Master(dataInfo);
     		masterRepository.save(master);
@@ -93,6 +94,7 @@ public class ApiController {
     	ApiResponse apiResponse = new ApiResponse(-99, "error");
 
     	EdgeLogUtil.log(gatewayId, "in", dataHistory.getToId(), gatewayId, "/api/gw/history/traceOn", dataHistory.toJson(), true);
+    	logger.debug(System.currentTimeMillis()+"|"+dataHistory.getDataId()+"|hist|"+dataHistory.getFromId()+"|"+dataHistory.getToId()+"|"+gatewayId);
 
     	try {
     		History history = new History(dataHistory);
