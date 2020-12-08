@@ -1,7 +1,5 @@
 package com.pentasecurity.edge.controller;
 
-import java.util.ArrayList;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +34,7 @@ public class ApiController {
     	ApiResponse apiResponse = new ApiResponse(-99, "error");
 
     	EdgeLogUtil.log(edgeId, "in", dataInfo.getDeviceId(), edgeId, "/api/edge/upload/traceOn", dataInfo.toJson(), true);
+    	logger.debug(System.currentTimeMillis()+"|"+dataInfo.getDataId()+"|recv|"+dataInfo.getDeviceId()+"|"+edgeId);
 
     	try {
     		edgeNodeService.registerTaskUpload(dataInfo, true);
@@ -74,6 +73,7 @@ public class ApiController {
     	ApiResponse apiResponse = new ApiResponse(-99, "error");
 
     	EdgeLogUtil.log(edgeId, "in", dataTrace.getFromId(), edgeId, "/api/edge/copy/traceOn", dataTrace.toJson(), true);
+    	logger.debug(System.currentTimeMillis()+"|"+dataTrace.getDataInfo().getDataId()+"|recv|"+dataTrace.getFromId()+"|"+edgeId);
 
     	try {
     		edgeNodeService.registerTaskCopy(dataTrace, true);
@@ -106,19 +106,20 @@ public class ApiController {
         return apiResponse;
     }
 
-    @PostMapping("/download/traceOn")
+
+    @PostMapping("/use/traceOn")
     @ResponseBody
-    public DataUseApiResponse downloadTraceOn(@RequestBody DataInfo dataInfo) {
+    public DataUseApiResponse useTraceOn(@RequestBody DataInfo req) {
     	DataUseApiResponse apiResponse = new DataUseApiResponse(-99, "error");
 
-    	EdgeLogUtil.log(edgeId, "in", dataInfo.getDeviceId(), edgeId, "/api/edge/download/traceOn", dataInfo.toJson(), true);
+    	EdgeLogUtil.log(edgeId, "in", req.getDeviceId(), edgeId, "/api/edge/use/traceOn", req.toJson(), true);
 
     	try {
-    		ArrayList<DataInfo> data = edgeNodeService.download(dataInfo, true);
+    		DataInfo dataInfo = edgeNodeService.useData(req, true);
 
         	apiResponse.setCode(0);
         	apiResponse.setMessage("OK");
-        	apiResponse.setData(data);
+        	apiResponse.setDataInfo(dataInfo);
     	} catch (Exception e) {
     		e.printStackTrace();
     	}
@@ -126,19 +127,19 @@ public class ApiController {
         return apiResponse;
     }
 
-    @PostMapping("/download/traceOff")
+    @PostMapping("/use/traceOff")
     @ResponseBody
-    public DataUseApiResponse downloadTraceOff(@RequestBody DataInfo dataInfo) {
+    public DataUseApiResponse useTraceOff(@RequestBody DataInfo req) {
     	DataUseApiResponse apiResponse = new DataUseApiResponse(-99, "error");
 
-    	EdgeLogUtil.log(edgeId, "in", dataInfo.getDeviceId(), edgeId, "/api/edge/download/traceOff", dataInfo.toJson(), false);
+    	EdgeLogUtil.log(edgeId, "in", req.getDeviceId(), edgeId, "/api/edge/use/traceOff", req.toJson(), false);
 
     	try {
-    		ArrayList<DataInfo> data = edgeNodeService.download(dataInfo, false);
+    		DataInfo dataInfo = edgeNodeService.useData(req, false);
 
         	apiResponse.setCode(0);
         	apiResponse.setMessage("OK");
-        	apiResponse.setData(data);
+        	apiResponse.setDataInfo(dataInfo);
     	} catch (Exception e) {
     		e.printStackTrace();
     	}

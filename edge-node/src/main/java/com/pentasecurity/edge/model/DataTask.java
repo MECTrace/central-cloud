@@ -102,7 +102,7 @@ public class DataTask extends BaseModel {
 			} else if ( taskType == EdgeNodeService.DATA_TASK_TYPE_COPY ) {
 				// 이웃 엣지 노드에서 복제받은 데이터를 보고
 				dataHistory = new DataHistory(dataId, fromType, fromId, "edge", EdgeNodeService.EDGE_ID, "copy", timestamp);
-			} else if ( taskType == EdgeNodeService.DATA_TASK_TYPE_DOWNLOAD ) {
+			} else if ( taskType == EdgeNodeService.DATA_TASK_TYPE_USE ) {
 				// 단말기가 다운로드 받은 데이터를 보고
 				dataHistory = new DataHistory(dataId, "edge", EdgeNodeService.EDGE_ID, fromType, fromId, "use", timestamp);
 			}

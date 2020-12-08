@@ -17,7 +17,6 @@ import org.springframework.util.StringUtils;
 
 import com.pentasecurity.edge.model.DataHistory;
 import com.pentasecurity.edge.model.DataInfo;
-import com.pentasecurity.edge.model.DataStorageItem;
 import com.pentasecurity.edge.model.DataTask;
 import com.pentasecurity.edge.model.DataTrace;
 import com.pentasecurity.edge.model.ServerInfo;
@@ -30,7 +29,7 @@ public class EdgeNodeService {
 
 	static final public int DATA_TASK_TYPE_UPLOAD = 1;
 	static final public int DATA_TASK_TYPE_COPY = 2;
-	static final public int DATA_TASK_TYPE_DOWNLOAD = 3;
+	static final public int DATA_TASK_TYPE_USE = 3;
 
 	@Value("${edge.edge-id}")
 	public String edgeId;
@@ -44,8 +43,6 @@ public class EdgeNodeService {
     public int copyDelayTime;
     @Value("${edge.copy-2nd-rate}")
     public double copy2ndRate;
-    @Value("${edge.expire-delay-time}")
-    public int expireDelayTime;
     @Value("${edge.max-copy-node}")
     public int maxCopyNode;
 
@@ -53,7 +50,6 @@ public class EdgeNodeService {
     static public String STORAGE_PATH;
     static public int COPY_DELAY_TIME;
     static public double COPY_2ND_RATE;
-    static public int EXPIRE_DELAY_TIME;
     static public int MAX_COPY_NODE;
 
     static public ArrayList<ServerInfo> nodes = null;
@@ -63,7 +59,6 @@ public class EdgeNodeService {
     AmoWalletService amoWalletService;
 
     static ConcurrentHashMap<String, DataTask> taskStorage = new ConcurrentHashMap<String, DataTask>();
-    static ConcurrentHashMap<String, DataStorageItem> dataStorage = new ConcurrentHashMap<String, DataStorageItem>();
 
     @PostConstruct
     public void init() {
@@ -96,7 +91,6 @@ public class EdgeNodeService {
     	STORAGE_PATH = storagePath;
     	COPY_DELAY_TIME = copyDelayTime;
     	COPY_2ND_RATE = copy2ndRate;
-    	EXPIRE_DELAY_TIME = expireDelayTime;
     	MAX_COPY_NODE = maxCopyNode;
     }
 
@@ -108,9 +102,7 @@ public class EdgeNodeService {
 
 		try {
 			DataTask dataTask = new DataTask(dataInfo, DATA_TASK_TYPE_UPLOAD, isOnTrace);
-			DataStorageItem dataItem = new DataStorageItem(dataInfo, isOnTrace);
 			taskStorage.put(dataTask.getTaskId(), dataTask);
-			dataStorage.put(dataInfo.getDataId(), dataItem);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -125,9 +117,7 @@ public class EdgeNodeService {
 
 		try {
 			DataTask dataTask = new DataTask(dataTrace, DATA_TASK_TYPE_COPY, isOnTrace);
-			DataStorageItem dataItem = new DataStorageItem(dataInfo, isOnTrace);
 			taskStorage.put(dataTask.getTaskId(), dataTask);
-			dataStorage.put(dataInfo.getDataId(), dataItem);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -141,17 +131,15 @@ public class EdgeNodeService {
 
 		try {
 			DataTask dataTask = new DataTask(dataInfo, DATA_TASK_TYPE_COPY, isOnTrace);
-			DataStorageItem dataItem = new DataStorageItem(dataInfo, isOnTrace);
 			taskStorage.put(dataTask.getTaskId(), dataTask);
-			dataStorage.put(dataInfo.getDataId(), dataItem);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	public void registerTaskDownload(String fromId, DataInfo dataInfo, boolean isOnTrace) {
+	public void registerTaskUse(String fromId, DataInfo dataInfo, boolean isOnTrace) {
 		try {
-			DataTask dataTask = new DataTask(dataInfo, DATA_TASK_TYPE_DOWNLOAD, isOnTrace);
+			DataTask dataTask = new DataTask(dataInfo, DATA_TASK_TYPE_USE, isOnTrace);
 			dataTask.setFromType("device");
 			dataTask.setFromId(fromId);
 
@@ -165,27 +153,18 @@ public class EdgeNodeService {
 	 * @param deviceId
 	 * @return
 	 */
-	public ArrayList<DataInfo> download(DataInfo dataInfo, boolean isOnTrace) {
-		ArrayList<DataInfo> data = new ArrayList<DataInfo>();
-
+	public DataInfo useData(DataInfo req, boolean isOnTrace) {
 		try {
-			Set<String> dataIdSet = dataStorage.keySet();
+			DataInfo dataInfo = read(req.getDataId());
 
-			for(String dataId : dataIdSet) {
-				DataStorageItem dataItem = dataStorage.get(dataId);
+			registerTaskUse(req.getDeviceId(), dataInfo, isOnTrace);
 
-				if ( dataItem != null && dataItem.checkDownload(dataInfo.getDeviceId(), isOnTrace) ) {
-					data.add(dataItem.getDataInfo());
-					dataItem.use(dataInfo.getDeviceId());
-
-					registerTaskDownload(dataInfo.getDeviceId(), dataItem.getDataInfo(), isOnTrace);
-				}
-			}
+			return dataInfo;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
-		return data;
+		return new DataInfo();
 	}
 
 	/**
@@ -205,16 +184,6 @@ public class EdgeNodeService {
 					removeDataTask(dataTask);
 				}
 			}
-
-			Set<String> dataIdSet = dataStorage.keySet();
-
-			for(String dataId : dataIdSet) {
-				DataStorageItem dataItem = dataStorage.get(dataId);
-
-				if ( dataItem != null ) {
-					removeDataStorageItem(dataItem);
-				}
-			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -230,6 +199,7 @@ public class EdgeNodeService {
 			String url = "/api/gw/upload" + (dataTask.isOnTrace() ? "/traceOn" : "/traceOff");
 
 			EdgeLogUtil.log(edgeId, "call", edgeId, gate.getServerId(), url, dataTask.getDataInfo().toJson(), dataTask.isOnTrace());
+			logger.debug(System.currentTimeMillis()+"|"+dataTask.getDataInfo().getDataId()+"|send|"+edgeId+"|"+gate.getServerId());
 
 	    	// 디바이스에서 직접 올라온 데이터를 보고
 	    	HttpUtil.post(gate.getServerUrl() + url, dataTask.getDataInfo().toJson());
@@ -258,6 +228,7 @@ public class EdgeNodeService {
 				DataTrace dataTrace = new DataTrace(dataTask.getDataInfo(), "edge", edgeId);
 
 				EdgeLogUtil.log(edgeId, "call", edgeId, node.getServerId(), url, dataTrace.toJson(), dataTask.isOnTrace());
+				logger.debug(System.currentTimeMillis()+"|"+dataTask.getDataInfo().getDataId()+"|send|"+edgeId+"|"+node.getServerId());
 
 				HttpUtil.post(node.getServerUrl() + url, dataTrace.toJson());
 			} else {
@@ -284,6 +255,7 @@ public class EdgeNodeService {
     		DataHistory dataHistory = dataTask.getDataHistory();
 
 	    	EdgeLogUtil.log(edgeId, "call", edgeId, gate.getServerId(), url, dataHistory.toJson(), dataTask.isOnTrace());
+	    	logger.debug(System.currentTimeMillis()+"|"+dataTask.getDataInfo().getDataId()+"|hist|"+dataTask.getFromId()+"|"+edgeId+"|"+gate.getServerId());
 
 	    	HttpUtil.post(gate.getServerUrl() + url, dataHistory.toJson());
 		}
@@ -299,18 +271,6 @@ public class EdgeNodeService {
 			taskStorage.remove(dataTask.getTaskId());
 		}
 	}
-
-
-	/**
-	 * 시간이 만료된 데이터는 삭제한다.
-	 * @param dataItem
-	 */
-	private void removeDataStorageItem(DataStorageItem dataItem) {
-		if ( dataItem.isExpired() ) {
-			dataStorage.remove(dataItem.getDataInfo().getDataId());
-		}
-	}
-
 
 	/**
 	 * 데이터를 지정된 위치에 파일로 생성한다.
@@ -330,5 +290,25 @@ public class EdgeNodeService {
     		e.printStackTrace();
     	}
 		return false;
+	}
+
+
+	/**
+	 * 데이터를 읽는다.
+	 * @param dataId
+	 * @param data
+	 * @return
+	 */
+	private DataInfo read(String dataId) {
+		try {
+			File file = new File(STORAGE_PATH+"/"+dataId+".data");
+			if ( file.exists() ) {
+				String dataJson = FileUtils.readFileToString(file, "UTF-8");
+				return DataInfo.fromJson(dataJson, DataInfo.class);
+			}
+		} catch (Exception e) {
+    		e.printStackTrace();
+    	}
+		return new DataInfo();
 	}
 }
