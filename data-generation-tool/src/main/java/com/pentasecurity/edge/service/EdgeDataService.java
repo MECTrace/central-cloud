@@ -1,11 +1,13 @@
 package com.pentasecurity.edge.service;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,9 +28,11 @@ public class EdgeDataService
 	static final public int DATA_TASK_TYPE_UPLOAD = 1;
 	static final public int DATA_TASK_TYPE_COPY = 2;
 	static final public int DATA_TASK_TYPE_DOWNLOAD = 3;
-	static final public int DATA_TASK_TYPE_DELETE = 4;
 
     Logger logger = LoggerFactory.getLogger("mainLogger");
+
+    @Value("${edge.storage-path}")
+    public String storagePath;
 
     @Value("${edge.device-id}")
     private String deviceId;
@@ -60,10 +64,21 @@ public class EdgeDataService
     	taskStorage.put(dataTask.getTaskId(), dataTask);
     };
 
-    public void registerDownloadTask(int maxSendCount, int delay, boolean isOnTrace) {
-    	DataTask dataTask = new DataTask(DATA_TASK_TYPE_DOWNLOAD, maxSendCount, delay, 0, 0, isOnTrace);
-    	taskStorage.put(dataTask.getTaskId(), dataTask);
-    };
+    public void useData(boolean isOnTrace) {
+    	String dataId = getRandomDataId();
+    	ServerInfo node = nodes.get((int)Math.floor(Math.random()*nodes.size()));
+    	DataInfo req = new DataInfo(dataId, "", deviceId, 0, "");
+
+    	logger.debug(System.currentTimeMillis()+"|"+dataId+"|req|"+node.getServerId());
+
+    	String url = node.getServerUrl() + "/api/edge/use" + (isOnTrace ? "/traceOn" : "/traceOff");
+    	String responseBody = HttpUtil.post(url, req.toJson());
+    	DataUseApiResponse response = DataUseApiResponse.fromJson(responseBody, DataUseApiResponse.class);
+
+    	EdgeLogUtil.log(deviceId, "call", deviceId, node.getServerId(), url, req.toJson(), isOnTrace);
+
+    	logger.debug(System.currentTimeMillis()+"|"+dataId+"|use|"+response.getDataInfo().toJson());
+    }
 
 	/**
 	 * taskStorage에 저장된 task들을 처리한다.
@@ -77,7 +92,6 @@ public class EdgeDataService
 
 				if ( dataTask != null ) {
 					uploadToEdge(dataTask);
-					downloadFromEdge(dataTask);
 					removeDataTask(dataTask);
 				}
 			}
@@ -93,11 +107,15 @@ public class EdgeDataService
 
     		DataInfo dataInfo = new DataInfo(deviceId, data);
 
-    		logger.debug("create data : "+dataInfo.getDataId());
+    		logger.debug(System.currentTimeMillis()+"|"+dataInfo.getDataId()+"|create");
 
 			String url = node.getServerUrl() + "/api/edge/upload" + (dataTask.isOnTrace() ? "/traceOn" : "/traceOff");
 
 			EdgeLogUtil.log(deviceId, "call", deviceId, node.getServerId(), url, dataInfo.toJson(), dataTask.isOnTrace());
+
+			logger.debug(System.currentTimeMillis()+"|"+dataInfo.getDataId()+"|send|"+deviceId+"|"+node.getServerId());
+
+			write(dataInfo);
 
 			HttpUtil.post(url, dataInfo.toJson());
 
@@ -105,29 +123,55 @@ public class EdgeDataService
 		}
 	}
 
-	private void downloadFromEdge(DataTask dataTask) {
-		if ( dataTask.checkDownload() ) {
-    		ServerInfo node = nodes.get((int)Math.floor(Math.random()*nodes.size()));
-    		String responseBody = null;
-
-    		DataInfo dataInfo = new DataInfo(deviceId);
-			String url = node.getServerUrl() + "/api/edge/download" + (dataTask.isOnTrace() ? "/traceOn" : "/traceOff");
-
-			EdgeLogUtil.log(deviceId, "call", deviceId, node.getServerId(), url, dataTask.toJson(), dataTask.isOnTrace());
-
-			responseBody = HttpUtil.post(url, dataInfo.toJson());
-
-    		DataUseApiResponse response = DataUseApiResponse.fromJson(responseBody, DataUseApiResponse.class);
-
-			dataTask.increaseSendCount();
-
-			EdgeLogUtil.log(deviceId, "download", deviceId, node.getServerId(), url, response.toJson(), dataTask.isOnTrace());
-		}
-	}
-
 	private void removeDataTask(DataTask dataTask) {
 		if ( dataTask.isDone() ) {
 			taskStorage.remove(dataTask.getTaskId());
+			logger.debug(System.currentTimeMillis()+"|done");
 		}
+	}
+
+
+	/**
+	 * 데이터를 지정된 위치에 파일로 생성한다.
+	 * @param dataId
+	 * @param data
+	 * @return
+	 */
+	private boolean write(DataInfo dataInfo) {
+		try {
+			File file = new File(storagePath+"/"+dataInfo.getDataId()+".data");
+			if ( !file.exists() ) {
+				FileUtils.forceMkdirParent(file);
+				FileUtils.writeStringToFile(file, dataInfo.toJson(), "UTF-8");
+				return true;
+			}
+		} catch (Exception e) {
+    		e.printStackTrace();
+    	}
+		return false;
+	}
+
+	/**
+	 * 저장된 파일들에서 임의의 데이터ID를 하나 가져온다.
+	 * @param dataId
+	 * @param data
+	 * @return
+	 */
+	private String getRandomDataId() {
+		try {
+			File dir = new File(storagePath);
+			String[] filenames = dir.list();
+			if ( filenames != null && filenames.length > 0 ) {
+				int idx = (int)Math.floor(Math.random()*filenames.length);
+				String filename = filenames[idx];
+				String dataId = filename.replace(".data", "");
+
+				return dataId;
+			}
+
+		} catch (Exception e) {
+    		e.printStackTrace();
+    	}
+		return "";
 	}
 }

@@ -23,11 +23,13 @@ public class ApiController {
 
     @GetMapping("/create/data/traceOn")
     @ResponseBody
-    public ApiResponse createDataTraceOn(HttpServletRequest request) {
+    public ApiResponse createDataTraceOn(HttpServletRequest request, int maxSendCount, int delay, int minSize, int maxSize) {
     	ApiResponse apiResponse = new ApiResponse(-99, "error");
 
     	try {
-    		edgeDataService.registerUploadTask(1, 3, 50, 100, true);
+    		logger.debug(System.currentTimeMillis()+"|start|"+maxSendCount);
+
+    		edgeDataService.registerUploadTask(maxSendCount, delay, minSize, maxSize, true);
 
         	apiResponse.setCode(0);
         	apiResponse.setMessage("OK");
@@ -40,11 +42,13 @@ public class ApiController {
 
     @GetMapping("/create/data/traceOff")
     @ResponseBody
-    public ApiResponse createDataTraceOff(HttpServletRequest request) {
+    public ApiResponse createDataTraceOff(HttpServletRequest request, int maxSendCount, int delay, int minSize, int maxSize) {
     	ApiResponse apiResponse = new ApiResponse(-99, "error");
 
     	try {
-    		edgeDataService.registerUploadTask(1, 3, 50, 100, false);
+    		logger.debug(System.currentTimeMillis()+"|start|"+maxSendCount);
+
+    		edgeDataService.registerUploadTask(maxSendCount, delay, minSize, maxSize, false);
 
         	apiResponse.setCode(0);
         	apiResponse.setMessage("OK");
@@ -55,13 +59,13 @@ public class ApiController {
         return apiResponse;
     }
 
-    @GetMapping("/download/data/traceOn")
+    @GetMapping("/use/data/traceOn")
     @ResponseBody
-    public ApiResponse downloadDataTraceOn(HttpServletRequest request) {
+    public ApiResponse useDataTraceOn(HttpServletRequest request) {
     	ApiResponse apiResponse = new ApiResponse(-99, "error");
 
     	try {
-    		edgeDataService.registerDownloadTask(1, 60, true);
+    		edgeDataService.useData(true);
 
         	apiResponse.setCode(0);
         	apiResponse.setMessage("OK");
@@ -72,13 +76,13 @@ public class ApiController {
         return apiResponse;
     }
 
-    @GetMapping("/download/data/traceOff")
+    @GetMapping("/use/data/traceOff")
     @ResponseBody
-    public ApiResponse downloadDataTraceOff(HttpServletRequest request) {
+    public ApiResponse useDataTraceOff(HttpServletRequest request) {
     	ApiResponse apiResponse = new ApiResponse(-99, "error");
 
     	try {
-    		edgeDataService.registerDownloadTask(1, 60, false);
+    		edgeDataService.useData(false);
 
         	apiResponse.setCode(0);
         	apiResponse.setMessage("OK");
