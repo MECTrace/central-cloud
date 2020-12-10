@@ -102,7 +102,18 @@ public class EdgeNodeService {
 
 		try {
 			DataTask dataTask = new DataTask(dataInfo, DATA_TASK_TYPE_UPLOAD, isOnTrace);
-			taskStorage.put(dataTask.getTaskId(), dataTask);
+
+	    	logger.debug(dataTask.getTimestamp()+"|"+dataInfo.getDataId()+"|recv|"+dataInfo.getDeviceId()+"|"+edgeId);
+
+			if ( copyDelayTime == 0 ) {
+				uploadToCentralGateway(dataTask);
+				reportToCentralGateway(dataTask);
+				for(int i=0;i<maxCopyNode;i++) {
+					copyToEdgeNode(dataTask);
+				}
+			} else {
+				taskStorage.put(dataTask.getTaskId(), dataTask);
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -117,7 +128,12 @@ public class EdgeNodeService {
 
 		try {
 			DataTask dataTask = new DataTask(dataTrace, DATA_TASK_TYPE_COPY, isOnTrace);
-			taskStorage.put(dataTask.getTaskId(), dataTask);
+			logger.debug(dataTask.getTimestamp()+"|"+dataTrace.getDataInfo().getDataId()+"|recv|"+dataTrace.getFromId()+"|"+edgeId);
+			if ( copyDelayTime == 0 ) {
+				reportToCentralGateway(dataTask);
+			} else {
+				taskStorage.put(dataTask.getTaskId(), dataTask);
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -131,33 +147,34 @@ public class EdgeNodeService {
 
 		try {
 			DataTask dataTask = new DataTask(dataInfo, DATA_TASK_TYPE_COPY, isOnTrace);
-			taskStorage.put(dataTask.getTaskId(), dataTask);
+			if ( copyDelayTime == 0 ) {
+				copyToEdgeNode(dataTask);
+				reportToCentralGateway(dataTask);
+			} else {
+				taskStorage.put(dataTask.getTaskId(), dataTask);
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	public void registerTaskUse(String fromId, DataInfo dataInfo, boolean isOnTrace) {
+	public DataInfo registerTaskUse(DataInfo req, boolean isOnTrace) {
 		try {
-			DataTask dataTask = new DataTask(dataInfo, DATA_TASK_TYPE_USE, isOnTrace);
-			dataTask.setFromType("device");
-			dataTask.setFromId(fromId);
-
-			taskStorage.put(dataTask.getTaskId(), dataTask);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	/**
-	 * @param deviceId
-	 * @return
-	 */
-	public DataInfo useData(DataInfo req, boolean isOnTrace) {
-		try {
+			long recvTimestamp = System.currentTimeMillis();
 			DataInfo dataInfo = read(req.getDataId());
 
-			registerTaskUse(req.getDeviceId(), dataInfo, isOnTrace);
+			DataTask dataTask = new DataTask(dataInfo, DATA_TASK_TYPE_USE, isOnTrace);
+			dataTask.setTimestamp(recvTimestamp);
+			dataTask.setFromType("device");
+			dataTask.setFromId(req.getDeviceId());
+
+			logger.debug(dataTask.getTimestamp()+"|"+dataInfo.getDataId()+"|use |"+req.getDeviceId()+"|"+edgeId);
+
+			if ( copyDelayTime == 0 ) {
+				reportToCentralGateway(dataTask);
+			} else {
+				taskStorage.put(dataTask.getTaskId(), dataTask);
+			}
 
 			return dataInfo;
 		} catch (Exception e) {

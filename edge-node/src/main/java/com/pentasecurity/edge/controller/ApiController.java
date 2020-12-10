@@ -34,7 +34,6 @@ public class ApiController {
     	ApiResponse apiResponse = new ApiResponse(-99, "error");
 
     	EdgeLogUtil.log(edgeId, "in", dataInfo.getDeviceId(), edgeId, "/api/edge/upload/traceOn", dataInfo.toJson(), true);
-    	logger.debug(System.currentTimeMillis()+"|"+dataInfo.getDataId()+"|recv|"+dataInfo.getDeviceId()+"|"+edgeId);
 
     	try {
     		edgeNodeService.registerTaskUpload(dataInfo, true);
@@ -73,7 +72,6 @@ public class ApiController {
     	ApiResponse apiResponse = new ApiResponse(-99, "error");
 
     	EdgeLogUtil.log(edgeId, "in", dataTrace.getFromId(), edgeId, "/api/edge/copy/traceOn", dataTrace.toJson(), true);
-    	logger.debug(System.currentTimeMillis()+"|"+dataTrace.getDataInfo().getDataId()+"|recv|"+dataTrace.getFromId()+"|"+edgeId);
 
     	try {
     		edgeNodeService.registerTaskCopy(dataTrace, true);
@@ -115,7 +113,7 @@ public class ApiController {
     	EdgeLogUtil.log(edgeId, "in", req.getDeviceId(), edgeId, "/api/edge/use/traceOn", req.toJson(), true);
 
     	try {
-    		DataInfo dataInfo = edgeNodeService.useData(req, true);
+    		DataInfo dataInfo = edgeNodeService.registerTaskUse(req, true);
 
         	apiResponse.setCode(0);
         	apiResponse.setMessage("OK");
@@ -135,7 +133,7 @@ public class ApiController {
     	EdgeLogUtil.log(edgeId, "in", req.getDeviceId(), edgeId, "/api/edge/use/traceOff", req.toJson(), false);
 
     	try {
-    		DataInfo dataInfo = edgeNodeService.useData(req, false);
+    		DataInfo dataInfo = edgeNodeService.registerTaskUse(req, false);
 
         	apiResponse.setCode(0);
         	apiResponse.setMessage("OK");

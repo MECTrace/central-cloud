@@ -67,8 +67,10 @@ public class DataTask extends BaseModel {
 	}
 
 	public boolean checkCopyStatus() {
-		if ( (taskType == EdgeNodeService.DATA_TASK_TYPE_UPLOAD || (taskType == EdgeNodeService.DATA_TASK_TYPE_COPY && (EdgeNodeService.COPY_2ND_RATE < Math.random()*100))) ) {
-			if ( copyCount < EdgeNodeService.nodes.size() && copyCount < EdgeNodeService.MAX_COPY_NODE ) {
+		if ( (taskType == EdgeNodeService.DATA_TASK_TYPE_UPLOAD || (taskType == EdgeNodeService.DATA_TASK_TYPE_COPY && (EdgeNodeService.COPY_2ND_RATE > Math.random()*100))) ) {
+			if ( EdgeNodeService.COPY_DELAY_TIME == 0 ) {
+				return true;
+			} else if ( copyCount < EdgeNodeService.nodes.size() && copyCount < EdgeNodeService.MAX_COPY_NODE ) {
 				long now = System.currentTimeMillis();
 				long due = timestamp + ((EdgeNodeService.COPY_DELAY_TIME * 1000) * (1+copyCount));
 
